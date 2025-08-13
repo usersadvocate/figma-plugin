@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Inter, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    h2 {
+      margin: 0 0 16px 0;
+      color: #333;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .section-selector {
+      margin-bottom: 16px;
+    }
+    
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .scan-button {
+      width: 100%;
+      padding: 12px;
+      background: #18a0fb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    
+    .scan-button:hover {
+      background: #0d8ce0;
+    }
+    
+    .scan-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .issues-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .issue-item {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #fafafa;
+    }
+    
+    .issue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .issue-title {
+      font-weight: 500;
+      color: #d32f2f;
+      font-size: 14px;
+    }
+    
+    .fix-button {
+      padding: 4px 8px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .fix-button:disabled {
+      background: #bdbdbd;
+      cursor: not-allowed;
+    }
+
+    .issue-details {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .suggestions {
+      font-size: 12px;
+      color: #1976d2;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .no-issues {
+      text-align: center;
+      color: #4caf50;
+      font-size: 14px;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Sections</h2>
+    
+    <div class="section-selector">
+      <label for="section-select">Select Section:</label>
+      <select id="section-select">
+        <option value="">Loading sections...</option>
+      </select>
+    </div>
+    
+    <div id="summary" class="loading">Select a section in the canvas – it will be preselected here.</div>
+  </div>
+
+  <script>
+    let currentIssues = [];
+    
+    // Load sections when plugin starts
+    parent.postMessage({ pluginMessage: { type: 'get-sections' } }, '*');
+    
+    const sectionSelect = document.getElementById('section-select');
+
+    // Handle section selection
+    sectionSelect.onchange = () => {};
+    
+    // Handle messages from plugin
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      
+      if (msg.type === 'sections-loaded') {
+        sectionSelect.innerHTML = '<option value="">Choose a section...</option>';
+        
+        msg.sections.forEach(section => {
+          const option = document.createElement('option');
+          option.value = section.id;
+          option.textContent = section.name;
+          sectionSelect.appendChild(option);
+        });
+        
+        if (msg.selectedSectionId) {
+          sectionSelect.value = msg.selectedSectionId;
+        }
+      }
+      
+      if (msg.type === 'selection-section') {
+        if (msg.sectionId) {
+          sectionSelect.value = msg.sectionId;
+        }
+      }
+      
+      // no-op
+    };
+    
+    function noop() {}
+  </script>
+</body>
+</html>
