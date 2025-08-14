@@ -4,7 +4,7 @@
   "description": "Your Figma Plugin",
   "main": "dist/code.js",
   "scripts": {
-    "build:main": "esbuild src/main.ts --bundle --platform=node --format=cjs --outfile=dist/code.js",
+    "build:main": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=es2018 --outfile=dist/code.js",
     "copy:ui": "mkdir -p dist && cp src/ui/index.html dist/ui.html",
     "build": "npm run build:main && npm run copy:ui",
     "watch": "npm run build:main -- --watch"

@@ -134,7 +134,11 @@
       </select>
     </div>
     
-    <div id="summary" class="loading">Select a section in the canvas – it will be preselected here.</div>
+    <button id="analyze-button" class="scan-button" disabled>
+      Analyze Section
+    </button>
+    
+    <div id="analysis-results" class="loading">Select a section and click analyze to see frames and text nodes</div>
   </div>
 
   <script>
@@ -144,9 +148,28 @@
     parent.postMessage({ pluginMessage: { type: 'get-sections' } }, '*');
     
     const sectionSelect = document.getElementById('section-select');
+    const analyzeButton = document.getElementById('analyze-button');
 
     // Handle section selection
-    sectionSelect.onchange = () => {};
+    sectionSelect.onchange = (e) => {
+      analyzeButton.disabled = !e.target.value;
+    };
+    
+    // Handle analyze button
+    analyzeButton.onclick = () => {
+      const sectionId = sectionSelect.value;
+      if (sectionId) {
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'analyze-section', 
+            sectionId: sectionId 
+          } 
+        }, '*');
+        
+        document.getElementById('analysis-results').innerHTML = 
+          '<div class="loading">Analyzing section...</div>';
+      }
+    };
     
     // Handle messages from plugin
     window.onmessage = (event) => {
@@ -164,19 +187,65 @@
         
         if (msg.selectedSectionId) {
           sectionSelect.value = msg.selectedSectionId;
+          analyzeButton.disabled = false;
         }
       }
       
       if (msg.type === 'selection-section') {
         if (msg.sectionId) {
           sectionSelect.value = msg.sectionId;
+          analyzeButton.disabled = false;
         }
       }
       
-      // no-op
+      if (msg.type === 'section-analysis') {
+        displayAnalysis(msg.analysis);
+      }
     };
     
-    function noop() {}
+    function displayAnalysis(analysis) {
+      const container = document.getElementById('analysis-results');
+      
+      if (!analysis) {
+        container.innerHTML = '<div class="loading">❌ Failed to analyze section</div>';
+        return;
+      }
+      
+      let html = `
+        <div class="no-issues">
+          <strong>${analysis.sectionName}</strong><br>
+          📁 ${analysis.totalFrames} frames, 📝 ${analysis.totalTextNodes} text nodes
+        </div>
+      `;
+      
+      if (analysis.frames.length > 0) {
+        html += '<div style="margin-top: 12px;">';
+        for (const frame of analysis.frames) {
+          html += `
+            <div class="issue-item">
+              <div class="issue-header">
+                <div class="issue-title">🖼️ ${frame.name}</div>
+                <div style="font-size: 12px;">${frame.textNodesCount} text nodes</div>
+              </div>
+          `;
+          
+          if (frame.textNodes.length > 0) {
+            html += '<div style="margin-top: 8px; font-size: 11px;">';
+            for (const textNode of frame.textNodes) {
+              html += `<div style="margin: 4px 0; padding: 4px; background: #f9f9f9; border-radius: 3px;">
+                📄 ${textNode.name}: "${textNode.characters}"
+              </div>`;
+            }
+            html += '</div>';
+          }
+          
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      
+      container.innerHTML = html;
+    }
   </script>
 </body>
 </html>
