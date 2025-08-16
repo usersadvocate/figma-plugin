@@ -14,6 +14,9 @@ interface FrameInfo {
     id: string;
     name: string;
     characters: string;
+    hasBoundVariables: boolean;
+    boundVariableDetails?: string;
+    propertyDetails: string[];
   }[];
 }
 
@@ -37,6 +40,8 @@ figma.ui.onmessage = async (msg) => {
     const analysis = await analyzeSectionContent(msg.sectionId);
     figma.ui.postMessage({ type: 'section-analysis', analysis });
   }
+  
+
   
   if (msg.type === 'cancel') {
     figma.closePlugin();
@@ -117,6 +122,132 @@ function startSectionsPolling() {
 
 attachDocumentChangeListener();
 
+// Helper function to resolve variable name and collection
+async function getVariableInfo(variableId: string): Promise<string> {
+  try {
+    console.log('Resolving variable ID:', variableId);
+    const variable = await figma.variables.getVariableById(variableId);
+    console.log('Variable object:', variable);
+    
+    if (!variable) {
+      console.log('Variable not found for ID:', variableId);
+      return `Unknown Variable`;
+    }
+    
+    const collection = await figma.variables.getVariableCollectionById(variable.variableCollectionId);
+    console.log('Collection object:', collection);
+    const collectionName = collection ? collection.name : 'Unknown Collection';
+    
+    const result = `${variable.name} (${collectionName})`;
+    console.log('Resolved variable info:', result);
+    return result;
+  } catch (error) {
+    console.error('Error resolving variable:', variableId, error);
+    return `Unknown Variable`;
+  }
+}
+
+// Helper function to get text style info
+async function getTextStyleInfo(textStyleId: string): Promise<string> {
+  try {
+    const textStyle = await figma.getStyleByIdAsync(textStyleId);
+    if (!textStyle) return 'Unknown Style';
+    return textStyle.name;
+  } catch (error) {
+    console.error('Error resolving text style:', textStyleId, error);
+    return 'Unknown Style';
+  }
+}
+
+// Helper function to check bound variables and text styles for a text node
+async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBoundVariables: boolean; details: string; propertyDetails: string[] }> {
+  const boundVars = textNode.boundVariables;
+  console.log(`Checking text node "${textNode.name}":`, boundVars);
+  console.log(`Text style ID:`, textNode.textStyleId);
+  
+  const propertyDetails: string[] = [];
+  let hasAnyVariables = false;
+  
+  // Check if text uses a Text Style (this affects multiple properties at once)
+  if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
+    const styleName = await getTextStyleInfo(textNode.textStyleId);
+    propertyDetails.push(`textStyle: Text Style (${styleName})`);
+    hasAnyVariables = true;
+  }
+  
+  // Check fontSize
+  if (boundVars && boundVars.fontSize && Array.isArray(boundVars.fontSize) && boundVars.fontSize.length > 0) {
+    const fontSize = boundVars.fontSize[0];
+    const varInfo = await getVariableInfo(fontSize.id);
+    propertyDetails.push(`fontSize: Variable (${varInfo})`);
+    hasAnyVariables = true;
+  } else if (!textNode.textStyleId) {
+    propertyDetails.push(`fontSize: Manual`);
+  }
+  
+  // Check lineHeight
+  if (boundVars && boundVars.lineHeight && Array.isArray(boundVars.lineHeight) && boundVars.lineHeight.length > 0) {
+    const lineHeight = boundVars.lineHeight[0];
+    const varInfo = await getVariableInfo(lineHeight.id);
+    propertyDetails.push(`lineHeight: Variable (${varInfo})`);
+    hasAnyVariables = true;
+  } else if (!textNode.textStyleId) {
+    propertyDetails.push(`lineHeight: Manual`);
+  }
+  
+  // Check letterSpacing
+  if (boundVars && boundVars.letterSpacing && Array.isArray(boundVars.letterSpacing) && boundVars.letterSpacing.length > 0) {
+    const letterSpacing = boundVars.letterSpacing[0];
+    const varInfo = await getVariableInfo(letterSpacing.id);
+    propertyDetails.push(`letterSpacing: Variable (${varInfo})`);
+    hasAnyVariables = true;
+  } else if (!textNode.textStyleId) {
+    propertyDetails.push(`letterSpacing: Manual`);
+  }
+  
+  // Check fills (text color) - can be variable even with text style
+  if (boundVars && boundVars.fills && boundVars.fills.length > 0) {
+    for (let i = 0; i < boundVars.fills.length; i++) {
+      const fillVar = boundVars.fills[i];
+      if (fillVar) {
+        const varInfo = await getVariableInfo(fillVar.id);
+        propertyDetails.push(`fills[${i}]: Variable (${varInfo})`);
+        hasAnyVariables = true;
+      }
+    }
+  } else if (textNode.fillStyleId && typeof textNode.fillStyleId === 'string') {
+    // Check if it uses a paint style for color
+    try {
+      const paintStyle = await figma.getStyleByIdAsync(textNode.fillStyleId);
+      const styleName = paintStyle ? paintStyle.name : 'Unknown Style';
+      propertyDetails.push(`fills: Paint Style (${styleName})`);
+      hasAnyVariables = true;
+    } catch (error) {
+      propertyDetails.push(`fills: Manual`);
+    }
+  } else {
+    propertyDetails.push(`fills: Manual`);
+  }
+  
+  // Check opacity
+  if (boundVars && boundVars.opacity && Array.isArray(boundVars.opacity) && boundVars.opacity.length > 0) {
+    const opacity = boundVars.opacity[0];
+    const varInfo = await getVariableInfo(opacity.id);
+    propertyDetails.push(`opacity: Variable (${varInfo})`);
+    hasAnyVariables = true;
+  } else if (!textNode.textStyleId) {
+    propertyDetails.push(`opacity: Manual`);
+  }
+
+  return {
+    hasBoundVariables: hasAnyVariables,
+    details: propertyDetails.join(', '),
+    propertyDetails
+  };
+}
+
+
+
 async function analyzeSectionContent(sectionId: string): Promise<SectionAnalysis | null> {
   try {
     console.log('Analyzing section with ID:', sectionId);
@@ -146,10 +277,16 @@ async function analyzeSectionContent(sectionId: string): Promise<SectionAnalysis
         id: frame.id,
         name: frame.name,
         textNodesCount: textNodes.length,
-        textNodes: textNodes.map(textNode => ({
-          id: textNode.id,
-          name: textNode.name,
-          characters: textNode.characters ? textNode.characters.substring(0, 50) + (textNode.characters.length > 50 ? '...' : '') : ''
+        textNodes: await Promise.all(textNodes.map(async (textNode) => {
+          const { hasBoundVariables, details, propertyDetails } = await checkTextNodeBoundVariables(textNode);
+          return {
+            id: textNode.id,
+            name: textNode.name,
+            characters: textNode.characters ? textNode.characters.substring(0, 50) + (textNode.characters.length > 50 ? '...' : '') : '',
+            hasBoundVariables,
+            boundVariableDetails: details,
+            propertyDetails
+          };
         }))
       };
       

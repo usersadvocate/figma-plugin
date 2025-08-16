@@ -138,6 +138,8 @@
       Analyze Section
     </button>
     
+
+    
     <div id="analysis-results" class="loading">Select a section and click analyze to see frames and text nodes</div>
   </div>
 
@@ -170,6 +172,8 @@
           '<div class="loading">Analyzing section...</div>';
       }
     };
+    
+
     
     // Handle messages from plugin
     window.onmessage = (event) => {
@@ -232,15 +236,23 @@
           if (frame.textNodes.length > 0) {
             html += '<div style="margin-top: 8px; font-size: 11px;">';
             for (const textNode of frame.textNodes) {
-              // For now, assume no variables (we'll add real detection later)
-              const hasVariables = textNode.hasBoundVariables || false;
-              const status = hasVariables ? 'Variable' : 'Not Variable';
-              const statusColor = hasVariables ? '#4caf50' : '#f44336';
+              html += `<div style="margin: 4px 0; padding: 6px; background: #f9f9f9; border-radius: 3px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-weight: 600;">"${textNode.characters}"</span>
+                </div>`;
               
-              html += `<div style="margin: 4px 0; padding: 6px; background: #f9f9f9; border-radius: 3px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: ${statusColor}; font-weight: 600;">${status}:</span>
-                <span style="flex-grow: 1; margin-left: 8px;">"${textNode.characters}"</span>
-              </div>`;
+              // Show individual property details
+              if (textNode.propertyDetails && textNode.propertyDetails.length > 0) {
+                html += '<div style="font-size: 10px; line-height: 1.4;">';
+                for (const property of textNode.propertyDetails) {
+                  const isVariable = property.includes('Variable');
+                  const color = isVariable ? '#4caf50' : '#666';
+                  html += `<div style="color: ${color}; margin: 2px 0;">${property}</div>`;
+                }
+                html += '</div>';
+              }
+              
+              html += '</div>';
             }
             html += '</div>';
           }
