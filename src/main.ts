@@ -125,25 +125,25 @@ attachDocumentChangeListener();
 // Helper function to resolve variable name and collection
 async function getVariableInfo(variableId: string): Promise<string> {
   try {
-    console.log('Resolving variable ID:', variableId);
-    const variable = await figma.variables.getVariableById(variableId);
-    console.log('Variable object:', variable);
+    console.log('🔍 Resolving variable ID:', variableId);
+    const variable = await figma.variables.getVariableByIdAsync(variableId);
+    console.log('📦 Variable object:', variable);
     
     if (!variable) {
-      console.log('Variable not found for ID:', variableId);
-      return `Unknown Variable`;
+      console.log('❌ Variable not found for ID:', variableId);
+      return `Unknown Variable (${variableId.substring(0, 10)}...)`;
     }
     
-    const collection = await figma.variables.getVariableCollectionById(variable.variableCollectionId);
-    console.log('Collection object:', collection);
+    const collection = await figma.variables.getVariableCollectionByIdAsync(variable.variableCollectionId);
+    console.log('📁 Collection object:', collection);
     const collectionName = collection ? collection.name : 'Unknown Collection';
     
     const result = `${variable.name} (${collectionName})`;
-    console.log('Resolved variable info:', result);
+    console.log('✅ Resolved variable info:', result);
     return result;
   } catch (error) {
-    console.error('Error resolving variable:', variableId, error);
-    return `Unknown Variable`;
+    console.error('💥 Error resolving variable:', variableId, error);
+    return `Error Variable (${variableId.substring(0, 10)}...)`;
   }
 }
 
