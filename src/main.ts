@@ -170,49 +170,45 @@ async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBou
   
   // Detection Rules:
   // 1. Variables (boundVariables) take precedence
-  // 2. Text Style (textStyleId) comes next  
+  // 2. Text Style (textStyleId) as one unit for typography
   // 3. Manual is fallback (neither Variables nor Text Style)
   
-  // Check fontSize
+  // First, check if there's a Text Style applied
+  if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
+    const styleName = await getTextStyleInfo(textNode.textStyleId);
+    propertyDetails.push(`textStyle: Text Style (${styleName})`);
+    hasAnyDesignSystemUsage = true;
+  }
+  
+  // Then check individual property overrides with Variables
   if (boundVars && boundVars.fontSize && Array.isArray(boundVars.fontSize) && boundVars.fontSize.length > 0) {
     const fontSize = boundVars.fontSize[0];
     const varInfo = await getVariableInfo(fontSize.id);
     propertyDetails.push(`fontSize: Variable (${varInfo})`);
     hasAnyDesignSystemUsage = true;
-  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
-    const styleName = await getTextStyleInfo(textNode.textStyleId);
-    propertyDetails.push(`fontSize: Text Style (${styleName})`);
-    hasAnyDesignSystemUsage = true;
-  } else {
-    propertyDetails.push(`fontSize: Manual`);
   }
   
-  // Check lineHeight
   if (boundVars && boundVars.lineHeight && Array.isArray(boundVars.lineHeight) && boundVars.lineHeight.length > 0) {
     const lineHeight = boundVars.lineHeight[0];
     const varInfo = await getVariableInfo(lineHeight.id);
     propertyDetails.push(`lineHeight: Variable (${varInfo})`);
     hasAnyDesignSystemUsage = true;
-  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
-    const styleName = await getTextStyleInfo(textNode.textStyleId);
-    propertyDetails.push(`lineHeight: Text Style (${styleName})`);
-    hasAnyDesignSystemUsage = true;
-  } else {
-    propertyDetails.push(`lineHeight: Manual`);
   }
   
-  // Check letterSpacing
   if (boundVars && boundVars.letterSpacing && Array.isArray(boundVars.letterSpacing) && boundVars.letterSpacing.length > 0) {
     const letterSpacing = boundVars.letterSpacing[0];
     const varInfo = await getVariableInfo(letterSpacing.id);
     propertyDetails.push(`letterSpacing: Variable (${varInfo})`);
     hasAnyDesignSystemUsage = true;
-  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
-    const styleName = await getTextStyleInfo(textNode.textStyleId);
-    propertyDetails.push(`letterSpacing: Text Style (${styleName})`);
-    hasAnyDesignSystemUsage = true;
-  } else {
-    propertyDetails.push(`letterSpacing: Manual`);
+  }
+  
+  // If no Text Style and no Variables for typography, show Manual
+  if (!textNode.textStyleId && 
+      (!boundVars || 
+       (!boundVars.fontSize || !Array.isArray(boundVars.fontSize) || boundVars.fontSize.length === 0) &&
+       (!boundVars.lineHeight || !Array.isArray(boundVars.lineHeight) || boundVars.lineHeight.length === 0) &&
+       (!boundVars.letterSpacing || !Array.isArray(boundVars.letterSpacing) || boundVars.letterSpacing.length === 0))) {
+    propertyDetails.push(`typography: Manual`);
   }
   
   // Check fills (text color)
@@ -238,15 +234,11 @@ async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBou
     propertyDetails.push(`fills: Manual`);
   }
   
-  // Check opacity
+  // Check opacity (separate from text style)
   if (boundVars && boundVars.opacity && Array.isArray(boundVars.opacity) && boundVars.opacity.length > 0) {
     const opacity = boundVars.opacity[0];
     const varInfo = await getVariableInfo(opacity.id);
     propertyDetails.push(`opacity: Variable (${varInfo})`);
-    hasAnyDesignSystemUsage = true;
-  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
-    const styleName = await getTextStyleInfo(textNode.textStyleId);
-    propertyDetails.push(`opacity: Text Style (${styleName})`);
     hasAnyDesignSystemUsage = true;
   } else {
     propertyDetails.push(`opacity: Manual`);
