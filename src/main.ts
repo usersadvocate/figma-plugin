@@ -166,22 +166,24 @@ async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBou
   console.log(`Text style ID:`, textNode.textStyleId);
   
   const propertyDetails: string[] = [];
-  let hasAnyVariables = false;
+  let hasAnyDesignSystemUsage = false;
   
-  // Check if text uses a Text Style (this affects multiple properties at once)
-  if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
-    const styleName = await getTextStyleInfo(textNode.textStyleId);
-    propertyDetails.push(`textStyle: Text Style (${styleName})`);
-    hasAnyVariables = true;
-  }
+  // Detection Rules:
+  // 1. Variables (boundVariables) take precedence
+  // 2. Text Style (textStyleId) comes next  
+  // 3. Manual is fallback (neither Variables nor Text Style)
   
   // Check fontSize
   if (boundVars && boundVars.fontSize && Array.isArray(boundVars.fontSize) && boundVars.fontSize.length > 0) {
     const fontSize = boundVars.fontSize[0];
     const varInfo = await getVariableInfo(fontSize.id);
     propertyDetails.push(`fontSize: Variable (${varInfo})`);
-    hasAnyVariables = true;
-  } else if (!textNode.textStyleId) {
+    hasAnyDesignSystemUsage = true;
+  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
+    const styleName = await getTextStyleInfo(textNode.textStyleId);
+    propertyDetails.push(`fontSize: Text Style (${styleName})`);
+    hasAnyDesignSystemUsage = true;
+  } else {
     propertyDetails.push(`fontSize: Manual`);
   }
   
@@ -190,8 +192,12 @@ async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBou
     const lineHeight = boundVars.lineHeight[0];
     const varInfo = await getVariableInfo(lineHeight.id);
     propertyDetails.push(`lineHeight: Variable (${varInfo})`);
-    hasAnyVariables = true;
-  } else if (!textNode.textStyleId) {
+    hasAnyDesignSystemUsage = true;
+  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
+    const styleName = await getTextStyleInfo(textNode.textStyleId);
+    propertyDetails.push(`lineHeight: Text Style (${styleName})`);
+    hasAnyDesignSystemUsage = true;
+  } else {
     propertyDetails.push(`lineHeight: Manual`);
   }
   
@@ -200,28 +206,31 @@ async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBou
     const letterSpacing = boundVars.letterSpacing[0];
     const varInfo = await getVariableInfo(letterSpacing.id);
     propertyDetails.push(`letterSpacing: Variable (${varInfo})`);
-    hasAnyVariables = true;
-  } else if (!textNode.textStyleId) {
+    hasAnyDesignSystemUsage = true;
+  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
+    const styleName = await getTextStyleInfo(textNode.textStyleId);
+    propertyDetails.push(`letterSpacing: Text Style (${styleName})`);
+    hasAnyDesignSystemUsage = true;
+  } else {
     propertyDetails.push(`letterSpacing: Manual`);
   }
   
-  // Check fills (text color) - can be variable even with text style
+  // Check fills (text color)
   if (boundVars && boundVars.fills && boundVars.fills.length > 0) {
     for (let i = 0; i < boundVars.fills.length; i++) {
       const fillVar = boundVars.fills[i];
       if (fillVar) {
         const varInfo = await getVariableInfo(fillVar.id);
         propertyDetails.push(`fills[${i}]: Variable (${varInfo})`);
-        hasAnyVariables = true;
+        hasAnyDesignSystemUsage = true;
       }
     }
   } else if (textNode.fillStyleId && typeof textNode.fillStyleId === 'string') {
-    // Check if it uses a paint style for color
     try {
       const paintStyle = await figma.getStyleByIdAsync(textNode.fillStyleId);
       const styleName = paintStyle ? paintStyle.name : 'Unknown Style';
       propertyDetails.push(`fills: Paint Style (${styleName})`);
-      hasAnyVariables = true;
+      hasAnyDesignSystemUsage = true;
     } catch (error) {
       propertyDetails.push(`fills: Manual`);
     }
@@ -234,13 +243,17 @@ async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBou
     const opacity = boundVars.opacity[0];
     const varInfo = await getVariableInfo(opacity.id);
     propertyDetails.push(`opacity: Variable (${varInfo})`);
-    hasAnyVariables = true;
-  } else if (!textNode.textStyleId) {
+    hasAnyDesignSystemUsage = true;
+  } else if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
+    const styleName = await getTextStyleInfo(textNode.textStyleId);
+    propertyDetails.push(`opacity: Text Style (${styleName})`);
+    hasAnyDesignSystemUsage = true;
+  } else {
     propertyDetails.push(`opacity: Manual`);
   }
 
   return {
-    hasBoundVariables: hasAnyVariables,
+    hasBoundVariables: hasAnyDesignSystemUsage,
     details: propertyDetails.join(', '),
     propertyDetails
   };

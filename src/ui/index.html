@@ -241,13 +241,25 @@
                   <span style="font-weight: 600;">"${textNode.characters}"</span>
                 </div>`;
               
-              // Show individual property details
+              // Show individual property details with detection rules
               if (textNode.propertyDetails && textNode.propertyDetails.length > 0) {
                 html += '<div style="font-size: 10px; line-height: 1.4;">';
                 for (const property of textNode.propertyDetails) {
-                  const isVariable = property.includes('Variable');
-                  const color = isVariable ? '#4caf50' : '#666';
-                  html += `<div style="color: ${color}; margin: 2px 0;">${property}</div>`;
+                  let color = '#666'; // Manual (default)
+                  let icon = '⚪'; // Manual
+                  
+                  if (property.includes('Variable')) {
+                    color = '#4caf50'; // Green for Variables
+                    icon = '🟢'; // Variable
+                  } else if (property.includes('Text Style') || property.includes('Paint Style')) {
+                    color = '#2196f3'; // Blue for Styles
+                    icon = '🔵'; // Style
+                  }
+                  
+                  html += `<div style="color: ${color}; margin: 2px 0; display: flex; align-items: center;">
+                    <span style="margin-right: 4px;">${icon}</span>
+                    <span>${property}</span>
+                  </div>`;
                 }
                 html += '</div>';
               }
