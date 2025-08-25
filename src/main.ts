@@ -992,17 +992,13 @@ async function analyzeSectionContent(
     for (const frame of frameChildren) {
       console.log("Processing frame:", frame.name);
 
-      // Find all nodes within this frame (not just text nodes)
+      // Find all visible nodes within this frame (not just text nodes)
       const allNodes = frame.findAll() as SceneNode[];
-      console.log(`Total nodes in frame: ${allNodes.length}`);
-
-      // Filter out invisible nodes
       const visibleNodes = allNodes.filter((node) => node.visible !== false);
-      console.log(`Visible nodes in frame: ${visibleNodes.length} (filtered ${allNodes.length - visibleNodes.length} invisible nodes)`);
 
       // Count text nodes (only visible ones)
       const textNodes = visibleNodes.filter((node) => node.type === "TEXT");
-      console.log("Visible text nodes in frame:", textNodes.length);
+      console.log(`Processing frame "${frame.name}": ${visibleNodes.length} nodes, ${textNodes.length} text nodes`);
 
       const frameInfo: FrameInfo = {
         id: frame.id,
