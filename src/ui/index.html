@@ -143,9 +143,69 @@
     <div id="analysis-results" class="loading">Select a section and click analyze to see frames and text nodes</div>
   </div>
 
-  <script>
+      <script>
     let currentIssues = [];
-    
+
+    // Function to jump to a specific node in Figma
+    function jumpToNode(nodeId) {
+      console.log('🔍 Jumping to node:', nodeId);
+      parent.postMessage({
+        pluginMessage: {
+          type: 'jump-to-node',
+          nodeId: nodeId
+        }
+      }, '*');
+    }
+
+    // Function to show feedback when jumping to a node
+    function showJumpFeedback(nodeName, nodeType) {
+      // Create a temporary notification
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+      `;
+      notification.innerHTML = `🎯 Jumped to ${nodeType}: "${nodeName}"`;
+
+      // Add animation CSS
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+
+      document.body.appendChild(notification);
+
+      // Remove after 3 seconds with fade out
+      setTimeout(() => {
+        notification.style.animation = 'fadeOut 0.5s ease-out';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 500);
+      }, 3000);
+
+      console.log(`🎯 Jump feedback shown for: ${nodeName} (${nodeType})`);
+    }
+
     // Load sections when plugin starts
     parent.postMessage({ pluginMessage: { type: 'get-sections' } }, '*');
     
@@ -205,6 +265,10 @@
       if (msg.type === 'section-analysis') {
         displayAnalysis(msg.analysis);
       }
+
+      if (msg.type === 'node-jumped') {
+        showJumpFeedback(msg.nodeName, msg.nodeType);
+      }
     };
     
     function displayAnalysis(analysis) {
@@ -215,12 +279,33 @@
         return;
       }
 
+      // Calculate total effects variables in the entire section
+      let totalEffectsVars = 0;
+      for (const frame of analysis.frames) {
+        for (const node of frame.nodes) {
+          if (node.hasBoundVariables) {
+            totalEffectsVars += node.variableBindings.filter(b => b.propertyGroup === 'effects').length;
+          }
+        }
+      }
+
       let html = `
         <div class="no-issues">
           <strong>${analysis.sectionName}</strong><br>
           📁 ${analysis.totalFrames} frames, 📝 ${analysis.totalTextNodes} text nodes, 🔗 ${analysis.totalNodes} total nodes
         </div>
       `;
+
+      // Add prominent effects alert if any effects variables found
+      if (totalEffectsVars > 0) {
+        html += `
+        <div style="background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1); color: white; padding: 12px 16px; border-radius: 8px; margin: 12px 0; font-size: 14px; font-weight: bold; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid #fff;">
+          🎨 🎯 🎨 <br>
+          🎨 EFFECTS VARIABLES DETECTED: ${totalEffectsVars} total effects variables found in this section! 🎨<br>
+          🎨 🎯 🎨
+        </div>
+        `;
+      }
 
       if (analysis.frames.length > 0) {
         html += '<div style="margin-top: 12px;">';
@@ -236,6 +321,14 @@
                 categoryCounts[category] += bindings.length;
               }
             }
+          }
+
+          // Check if this frame has any effects variables
+          const totalEffectsVars = categoryCounts.effects;
+          if (totalEffectsVars > 0) {
+            html += '<div style="background: linear-gradient(90deg, #ff6b6b, #4ecdc4); color: white; padding: 6px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">';
+            html += `🎨 FRAME ALERT: ${totalEffectsVars} Effects Variables Found in This Frame!`;
+            html += '</div>';
           }
 
           const categorySummary = Object.entries(categoryCounts)
@@ -268,16 +361,27 @@
               const nodeTitle = node.characters ? `"${node.characters}"` : node.name;
               const variableCount = node.variableBindings.length;
 
-              html += `<div style="margin: 4px 0; padding: 8px; background: ${node.hasBoundVariables ? '#e8f5e8' : '#f9f9f9'}; border-radius: 3px; border-left: 3px solid ${node.hasBoundVariables ? '#4caf50' : '#ddd'};">`;
+              html += `<div style="margin: 4px 0; padding: 8px; background: ${node.hasBoundVariables ? '#e8f5e8' : '#f9f9f9'}; border-radius: 3px; border-left: 3px solid ${node.hasBoundVariables ? '#4caf50' : '#ddd'}; cursor: pointer; transition: all 0.2s ease;" onclick="jumpToNode('${node.id}')" onmouseover="this.style.backgroundColor='${node.hasBoundVariables ? '#d4edda' : '#f0f0f0'}'" onmouseout="this.style.backgroundColor='${node.hasBoundVariables ? '#e8f5e8' : '#f9f9f9'}'">`;
 
               // Node header
               html += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span style="font-weight: 600;">${nodeEmoji} ${nodeTitle}</span>
-                <span style="font-size: 10px; color: #666;">${node.type} ${variableCount > 0 ? `• ${variableCount} vars` : ''}</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 10px; color: #666;">${node.type} ${variableCount > 0 ? `• ${variableCount} vars` : ''}</span>
+                  <button style="padding: 2px 6px; background: #007acc; color: white; border: none; border-radius: 3px; font-size: 9px; cursor: pointer;" onclick="event.stopPropagation(); jumpToNode('${node.id}')">🔍</button>
+                </div>
               </div>`;
 
               // Show grouped variable bindings
               if (node.hasBoundVariables && node.variableBindings.length > 0) {
+                // Check if this node has effects variables
+                const effectsBindings = node.variableBindings.filter(b => b.propertyGroup === 'effects');
+                if (effectsBindings.length > 0) {
+                  html += '<div style="background: linear-gradient(90deg, #ff6b6b, #4ecdc4); color: white; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; font-size: 9px; font-weight: bold; text-align: center;">';
+                  html += `🎨 ${effectsBindings.length} Effects Variables Detected!`;
+                  html += '</div>';
+                }
+
                 html += '<div style="font-size: 10px; line-height: 1.4;">';
 
                 const groupIcons = {
@@ -305,14 +409,52 @@
                         ${groupIcons[group]} ${groupNames[group]} (${bindings.length})
                       </div>`;
 
-                    for (const binding of bindings) {
-                      const propertyName = binding.bindingType === 'array'
-                        ? `${binding.property}[${binding.arrayIndex}]`
-                        : binding.property;
+                    // Group effects by type for better organization
+                    if (group === 'effects') {
+                      const effectsByType = {};
+                      bindings.forEach(binding => {
+                        let effectType = 'General Effects';
+                        if (binding.property.includes('dropShadow')) effectType = 'Drop Shadow';
+                        else if (binding.property.includes('innerShadow')) effectType = 'Inner Shadow';
+                        else if (binding.property.includes('layerBlur')) effectType = 'Layer Blur';
+                        else if (binding.property.includes('backgroundBlur')) effectType = 'Background Blur';
+                        else if (binding.property.includes('DROP_SHADOW')) effectType = 'Drop Shadow';
+                        else if (binding.property.includes('INNER_SHADOW')) effectType = 'Inner Shadow';
+                        else if (binding.property.includes('LAYER_BLUR')) effectType = 'Layer Blur';
+                        else if (binding.property.includes('BACKGROUND_BLUR')) effectType = 'Background Blur';
 
-                      html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 8px;">
-                        <strong>${propertyName}:</strong> ${binding.variableName} (${binding.collectionName})
-                      </div>`;
+                        if (!effectsByType[effectType]) effectsByType[effectType] = [];
+                        effectsByType[effectType].push(binding);
+                      });
+
+                      for (const [effectType, effectBindings] of Object.entries(effectsByType)) {
+                        html += `<div style="margin: 2px 0; padding: 2px; background: rgba(255, 255, 255, 0.5); border-radius: 2px;">
+                          <div style="font-weight: bold; color: #1976d2; font-size: 8px; margin-bottom: 1px;">
+                            ${effectType}
+                          </div>`;
+
+                        effectBindings.forEach(binding => {
+                          const propertyName = binding.bindingType === 'array'
+                            ? `${binding.property}[${binding.arrayIndex}]`
+                            : binding.property;
+
+                          html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 4px; font-size: 9px;">
+                            <strong>${propertyName.replace(/^(dropShadow\.|innerShadow\.|layerBlur\.|backgroundBlur\.)/, '')}:</strong> ${binding.variableName} (${binding.collectionName})
+                          </div>`;
+                        });
+                        html += '</div>';
+                      }
+                    } else {
+                      // For non-effects groups, show normally
+                      for (const binding of bindings) {
+                        const propertyName = binding.bindingType === 'array'
+                          ? `${binding.property}[${binding.arrayIndex}]`
+                          : binding.property;
+
+                        html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 8px;">
+                          <strong>${propertyName}:</strong> ${binding.variableName} (${binding.collectionName})
+                        </div>`;
+                      }
                     }
                     html += '</div>';
                   }

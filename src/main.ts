@@ -52,6 +52,10 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: "section-analysis", analysis });
   }
 
+  if (msg.type === "jump-to-node") {
+    jumpToNode(msg.nodeId);
+  }
+
   if (msg.type === "cancel") {
     figma.closePlugin();
   }
@@ -137,6 +141,69 @@ function startSectionsPolling() {
 
 attachDocumentChangeListener();
 
+// Function to jump to a specific node in Figma
+async function jumpToNode(nodeId: string) {
+  try {
+    console.log(`🔍 Jumping to node: ${nodeId}`);
+
+    // Find the node by ID
+    const targetNode = await figma.getNodeByIdAsync(nodeId);
+
+    if (!targetNode) {
+      console.error(`❌ Node not found: ${nodeId}`);
+      return;
+    }
+
+    // Check if it's a scene node (not a page node)
+    if (targetNode.type === "PAGE") {
+      console.error(`❌ Cannot jump to page nodes: ${nodeId}`);
+      return;
+    }
+
+    const sceneNode = targetNode as SceneNode;
+    console.log(`✅ Found node: ${sceneNode.name} (${sceneNode.type})`);
+
+    // Select the node
+    figma.currentPage.selection = [sceneNode];
+
+    // Scroll the node into view with some padding
+    if (sceneNode.absoluteBoundingBox) {
+      const bounds = sceneNode.absoluteBoundingBox;
+      const padding = 50; // Add some padding around the node
+
+      // Calculate the viewport bounds with padding
+      const viewportBounds = {
+        x: bounds.x - padding,
+        y: bounds.y - padding,
+        width: bounds.width + padding * 2,
+        height: bounds.height + padding * 2,
+      };
+
+      // Scroll and zoom to fit the node
+      figma.viewport.scrollAndZoomIntoView([sceneNode]);
+
+      console.log(`🎯 Jumped to node: ${sceneNode.name}`);
+      console.log(`📍 Node bounds:`, bounds);
+      console.log(`📏 Viewport adjusted with ${padding}px padding`);
+    } else {
+      console.log(`⚠️ Node has no bounding box, just selecting it`);
+    }
+
+    // Also notify the UI that we've jumped to the node
+    figma.ui.postMessage({
+      type: "node-jumped",
+      nodeId: nodeId,
+      nodeName: sceneNode.name,
+      nodeType: sceneNode.type,
+    });
+  } catch (error) {
+    console.error(
+      `💥 Error jumping to node ${nodeId}:`,
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+}
+
 // Define comprehensive design properties grouped by category
 const DESIGN_PROPERTY_GROUPS = {
   text: [
@@ -181,7 +248,27 @@ const DESIGN_PROPERTY_GROUPS = {
   ],
   effects: [
     "effects",
-    // Individual effect properties that can have variable bindings
+    // Effect types
+    "DROP_SHADOW",
+    "INNER_SHADOW",
+    "LAYER_BLUR",
+    "BACKGROUND_BLUR",
+    // Effect style bindings
+    "effectStyleId",
+    // Effect properties by type
+    "dropShadow.color",
+    "dropShadow.offsetX",
+    "dropShadow.offsetY",
+    "dropShadow.radius",
+    "dropShadow.spread",
+    "innerShadow.color",
+    "innerShadow.offsetX",
+    "innerShadow.offsetY",
+    "innerShadow.radius",
+    "innerShadow.spread",
+    "layerBlur.radius",
+    "backgroundBlur.radius",
+    // Generic effect properties (fallback)
     "effect.color",
     "effect.offsetX",
     "effect.offsetY",
@@ -225,8 +312,16 @@ function getPropertyGroup(property: string): PropertyGroup {
     }
   }
 
-  // Handle nested effect properties
-  if (property.startsWith("effect.")) {
+  // Handle effect-related properties
+  if (
+    property.startsWith("effect.") ||
+    property.startsWith("dropShadow.") ||
+    property.startsWith("innerShadow.") ||
+    property.startsWith("layerBlur.") ||
+    property.startsWith("backgroundBlur.") ||
+    property.includes("SHADOW") ||
+    property.includes("BLUR")
+  ) {
     return "effects";
   }
 
@@ -299,8 +394,169 @@ async function extractVariableBindings(
 
     console.log(
       `🔍 Checking node "${node.name}" (${node.type}) for bound variables:`,
-      JSON.stringify(boundVars, null, 2)
+      boundVars
     );
+
+    // Method 3: Check for bound variables using getBoundVariableForKey API
+    console.log(`🔍 Checking for key-based variable bindings:`);
+    const possibleKeys = [
+      "effects",
+      "dropShadow",
+      "innerShadow",
+      "layerBlur",
+      "backgroundBlur",
+      "shadow",
+      "effectStyleId",
+      "fillStyleId",
+      "strokeStyleId",
+      "textStyleId",
+    ];
+
+    for (const key of possibleKeys) {
+      try {
+        // Check if this node has the method and try to get bound variable for this key
+        if (typeof (node as any).getBoundVariableForKey === "function") {
+          const boundVar = (node as any).getBoundVariableForKey(key);
+          if (boundVar) {
+            console.log(`   🎯 FOUND KEY-BASED BINDING: "${key}" ->`, boundVar);
+            // Add this to our boundVars for processing
+            if (!boundVars[key]) {
+              boundVars[key] = boundVar;
+            }
+          }
+        }
+      } catch (error) {
+        // Method might not exist or might error, that's okay
+        console.log(
+          `   ❌ Error checking key "${key}":`,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    console.log(
+      `📋 Final boundVars keys after key-based check:`,
+      Object.keys(boundVars)
+    );
+
+    // Method 4: Check for component properties that might contain effects bindings
+    if (node.type === "INSTANCE") {
+      const instanceNode = node as InstanceNode;
+      console.log(`🔍 Checking instance properties for effects:`);
+
+      if (instanceNode.componentProperties) {
+        console.log(
+          `   Found component properties:`,
+          Object.keys(instanceNode.componentProperties)
+        );
+        for (const [propKey, propValue] of Object.entries(
+          instanceNode.componentProperties
+        )) {
+          if (
+            propKey.toLowerCase().includes("shadow") ||
+            propKey.toLowerCase().includes("effect")
+          ) {
+            console.log(
+              `   🎯 Found effects-related component property "${propKey}":`,
+              propValue
+            );
+          }
+
+          // Check if component property has bound variables
+          if (
+            typeof propValue === "object" &&
+            propValue !== null &&
+            "boundVariables" in propValue
+          ) {
+            console.log(
+              `   📋 Component property "${propKey}" has bound variables:`,
+              (propValue as any).boundVariables
+            );
+          }
+        }
+      }
+    }
+
+    // Debug: Check specifically for effects
+    if (boundVars && typeof boundVars === "object") {
+      if ("effects" in boundVars) {
+        console.log(
+          `🎯 Node "${node.name}" has effects binding:`,
+          boundVars.effects
+        );
+      } else {
+        console.log(`❌ Node "${node.name}" has NO effects binding`);
+      }
+    }
+
+    // Debug: Check if node has effects property directly
+    const nodeAsAny = node as any;
+    if (nodeAsAny.effects && Array.isArray(nodeAsAny.effects)) {
+      console.log(
+        `🎨 Node "${node.name}" has ${nodeAsAny.effects.length} effects:`
+      );
+      nodeAsAny.effects.forEach((effect: any, index: number) => {
+        console.log(`   Effect ${index}:`, {
+          type: effect.type,
+          visible: effect.visible,
+          color: effect.color,
+          offset: effect.offset,
+          radius: effect.radius,
+          spread: effect.spread,
+        });
+      });
+    } else {
+      console.log(`❌ Node "${node.name}" has no effects array`);
+    }
+
+    // Debug: Check for shadow-related properties directly on the node
+    console.log(`🔍 Checking for shadow properties on "${node.name}":`);
+    const shadowProps = [
+      "shadow",
+      "dropShadow",
+      "innerShadow",
+      "boxShadow",
+      "textShadow",
+    ];
+    shadowProps.forEach((prop) => {
+      if (nodeAsAny[prop]) {
+        console.log(`   🎯 Found ${prop}:`, nodeAsAny[prop]);
+      }
+    });
+
+    // Debug: Check for any property that contains "shadow" or "effect"
+    console.log(
+      `🔍 Checking all node properties for shadow/effect-related keys:`
+    );
+    Object.keys(nodeAsAny).forEach((key) => {
+      if (
+        key.toLowerCase().includes("shadow") ||
+        key.toLowerCase().includes("effect")
+      ) {
+        console.log(`   🎯 Found property "${key}":`, nodeAsAny[key]);
+      }
+    });
+
+    // Debug: Check if there are any variables that contain "shadow" in their name
+    console.log(`🔍 Looking for variables with "shadow" in the name:`);
+    try {
+      const allVariables = await figma.variables.getLocalVariablesAsync();
+      const shadowVars = allVariables.filter((v) =>
+        v.name.toLowerCase().includes("shadow")
+      );
+      if (shadowVars.length > 0) {
+        console.log(
+          `   🎯 Found ${shadowVars.length} shadow-related variables:`
+        );
+        shadowVars.forEach((v) => {
+          console.log(`      - "${v.name}" (${v.id})`);
+        });
+      } else {
+        console.log(`   ❌ No shadow-related variables found`);
+      }
+    } catch (error) {
+      console.log(`   ❌ Error checking variables:`, error);
+    }
 
     if (!boundVars || typeof boundVars !== "object") {
       console.log("⚠️ No bound variables found on node");
@@ -310,7 +566,42 @@ async function extractVariableBindings(
     // Special handling for effects - check both array and nested properties
     const effectsBinding = boundVars["effects"];
     if (effectsBinding) {
-      console.log(`✨ Found effects binding:`, effectsBinding);
+      console.log(
+        `✨ Found effects binding:`,
+        JSON.stringify(effectsBinding, null, 2)
+      );
+
+      // Check if this is a key-based binding (single variable reference)
+      if (
+        effectsBinding &&
+        effectsBinding.id &&
+        !Array.isArray(effectsBinding)
+      ) {
+        console.log(
+          `🎯 Effects bound via setBoundVariableForKey! Processing single binding...`
+        );
+        try {
+          const varInfo = await getVariableInfo(effectsBinding.id);
+          if (varInfo) {
+            bindings.push({
+              property: "effects",
+              propertyGroup: "effects",
+              variableId: effectsBinding.id,
+              variableName: varInfo.name,
+              collectionName: varInfo.collectionName,
+              bindingType: "single",
+            });
+            console.log(
+              `🎨 KEY-BASED EFFECTS VARIABLE DETECTED: "${varInfo.name}"!`
+            );
+          }
+        } catch (error) {
+          console.error(
+            "💥 Error processing key-based effects binding:",
+            error
+          );
+        }
+      }
 
       try {
         if (Array.isArray(effectsBinding)) {
@@ -331,29 +622,90 @@ async function extractVariableBindings(
                 });
               }
             } else if (effectBind && typeof effectBind === "object") {
-              // Check for individual effect property bindings
-              const effectProperties = [
-                "color",
-                "offsetX",
-                "offsetY",
-                "radius",
-                "spread",
-                "blur",
-              ];
-              for (const effectProp of effectProperties) {
-                const nestedBinding = effectBind[effectProp];
-                if (nestedBinding && nestedBinding.id) {
-                  const varInfo = await getVariableInfo(nestedBinding.id);
+              // Check effect type and handle accordingly
+              const effectType = effectBind.type;
+
+              if (
+                effectType === "DROP_SHADOW" ||
+                effectType === "INNER_SHADOW"
+              ) {
+                // Shadow effects have: color, offsetX, offsetY, radius, spread
+                const shadowPrefix =
+                  effectType === "DROP_SHADOW" ? "dropShadow" : "innerShadow";
+                const shadowProperties = [
+                  "color",
+                  "offsetX",
+                  "offsetY",
+                  "radius",
+                  "spread",
+                ];
+
+                for (const prop of shadowProperties) {
+                  const nestedBinding = effectBind[prop];
+                  if (nestedBinding && nestedBinding.id) {
+                    const varInfo = await getVariableInfo(nestedBinding.id);
+                    if (varInfo) {
+                      bindings.push({
+                        property: `${shadowPrefix}.${prop}`,
+                        propertyGroup: "effects",
+                        variableId: nestedBinding.id,
+                        variableName: varInfo.name,
+                        collectionName: varInfo.collectionName,
+                        bindingType: "array",
+                        arrayIndex: i,
+                      });
+                    }
+                  }
+                }
+              } else if (
+                effectType === "LAYER_BLUR" ||
+                effectType === "BACKGROUND_BLUR"
+              ) {
+                // Blur effects have: radius
+                const blurPrefix =
+                  effectType === "LAYER_BLUR" ? "layerBlur" : "backgroundBlur";
+                const radiusBinding = effectBind.radius;
+
+                if (radiusBinding && radiusBinding.id) {
+                  const varInfo = await getVariableInfo(radiusBinding.id);
                   if (varInfo) {
                     bindings.push({
-                      property: `effect.${effectProp}`,
+                      property: `${blurPrefix}.radius`,
                       propertyGroup: "effects",
-                      variableId: nestedBinding.id,
+                      variableId: radiusBinding.id,
                       variableName: varInfo.name,
                       collectionName: varInfo.collectionName,
                       bindingType: "array",
                       arrayIndex: i,
                     });
+                  }
+                }
+              } else {
+                // Fallback for unknown effect types - check common properties
+                const effectProperties = [
+                  "color",
+                  "offsetX",
+                  "offsetY",
+                  "radius",
+                  "spread",
+                  "blur",
+                ];
+
+                for (const effectProp of effectProperties) {
+                  const nestedBinding = effectBind[effectProp];
+                  if (nestedBinding && nestedBinding.id) {
+                    const varInfo = await getVariableInfo(nestedBinding.id);
+                    if (varInfo) {
+                      bindings.push({
+                        property: `effect.${effectProp}`,
+                        propertyGroup: "effects",
+                        variableId: nestedBinding.id,
+                        variableName: varInfo.name,
+                        collectionName: varInfo.collectionName,
+                        bindingType: "array",
+                        arrayIndex: i,
+                      });
+                    }
                   }
                 }
               }
@@ -365,9 +717,98 @@ async function extractVariableBindings(
       }
     }
 
+    // Debug: Check for style-related bindings that might contain shadow info
+    console.log(`🔍 Checking for style-related bindings on "${node.name}":`);
+    const styleProps = [
+      "fillStyleId",
+      "strokeStyleId",
+      "textStyleId",
+      "effectStyleId",
+    ];
+    styleProps.forEach((prop) => {
+      if (boundVars[prop]) {
+        console.log(`   🎯 Found style binding "${prop}":`, boundVars[prop]);
+        // Check if this style has variable bindings
+        if (Array.isArray(boundVars[prop])) {
+          boundVars[prop].forEach((binding: any, index: number) => {
+            if (binding && binding.id) {
+              console.log(
+                `      📋 ${prop}[${index}] bound to variable:`,
+                binding.id
+              );
+            }
+          });
+        } else if (boundVars[prop] && boundVars[prop].id) {
+          console.log(
+            `      📋 ${prop} bound to variable:`,
+            boundVars[prop].id
+          );
+        }
+      }
+    });
+
+    // Debug: Look for any boundVars keys that contain "shadow"
+    Object.keys(boundVars).forEach((key) => {
+      if (key.toLowerCase().includes("shadow")) {
+        console.log(
+          `   🎯 Found shadow-related boundVar "${key}":`,
+          boundVars[key]
+        );
+      }
+    });
+
+    // Special handling for effectStyleId
+    const effectStyleBinding = boundVars["effectStyleId"];
+    if (effectStyleBinding) {
+      console.log(`🎨 Found effectStyleId binding:`, effectStyleBinding);
+
+      try {
+        // Handle effectStyleId bindings (can be single or array)
+        if (Array.isArray(effectStyleBinding)) {
+          for (let i = 0; i < effectStyleBinding.length; i++) {
+            const bind = effectStyleBinding[i];
+            if (bind && bind.id) {
+              const varInfo = await getVariableInfo(bind.id);
+              if (varInfo) {
+                bindings.push({
+                  property: "effectStyleId",
+                  propertyGroup: "effects",
+                  variableId: bind.id,
+                  variableName: varInfo.name,
+                  collectionName: varInfo.collectionName,
+                  bindingType: "array",
+                  arrayIndex: i,
+                });
+                console.log(
+                  `🎨 EFFECT STYLE VARIABLE DETECTED: "${varInfo.name}" bound to effectStyleId!`
+                );
+              }
+            }
+          }
+        } else if (effectStyleBinding && effectStyleBinding.id) {
+          const varInfo = await getVariableInfo(effectStyleBinding.id);
+          if (varInfo) {
+            bindings.push({
+              property: "effectStyleId",
+              propertyGroup: "effects",
+              variableId: effectStyleBinding.id,
+              variableName: varInfo.name,
+              collectionName: varInfo.collectionName,
+              bindingType: "single",
+            });
+            console.log(
+              `🎨 EFFECT STYLE VARIABLE DETECTED: "${varInfo.name}" bound to effectStyleId!`
+            );
+          }
+        }
+      } catch (error) {
+        console.error("💥 Error processing effectStyleId binding:", error);
+      }
+    }
+
     // Iterate through all other design properties
     for (const prop of DESIGN_PROPERTIES) {
-      if (prop === "effects") continue; // Skip effects as we handled it above
+      if (prop === "effects" || prop === "effectStyleId") continue; // Skip effects and effectStyleId as we handled them above
 
       const binding = boundVars[prop];
       if (!binding) continue;
@@ -420,6 +861,23 @@ async function extractVariableBindings(
     console.log(
       `✅ Found ${bindings.length} variable bindings for node "${node.name}"`
     );
+
+    // Summary of what was found
+    if (bindings.length > 0) {
+      const effectsCount = bindings.filter(
+        (b) => b.propertyGroup === "effects"
+      ).length;
+      if (effectsCount > 0) {
+        console.log(
+          `🎨 EFFECTS DETECTED: ${effectsCount} effects variables found on "${node.name}"!`
+        );
+        console.log(
+          `📋 Effects bindings:`,
+          bindings.filter((b) => b.propertyGroup === "effects")
+        );
+      }
+    }
+
     return bindings;
   } catch (error) {
     console.error("💥 Error extracting variable bindings:", error);

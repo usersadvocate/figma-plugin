@@ -116,4 +116,25 @@ if (allPassed) {
   console.log('💡 Review warnings and decide if they need to be addressed.');
 }
 
-console.log('\n📝 Remember to follow all project rules in .devrules');
+  console.log('\n📝 Remember to follow all project rules in .devrules');
+
+  // Test jump functionality
+  console.log('\n🧪 Testing jump functionality...');
+  const mainContent = fs.readFileSync('src/main.ts', 'utf8');
+  const uiContent = fs.readFileSync('src/ui/index.html', 'utf8');
+
+  const hasJumpFunction = mainContent.includes('jumpToNode');
+  const hasJumpHandler = mainContent.includes('jump-to-node');
+  const hasClickHandler = uiContent.includes('onclick="jumpToNode');
+  const hasHoverEffect = uiContent.includes('onmouseover');
+
+  console.log(`✅ jumpToNode function in main.ts: ${hasJumpFunction ? 'Present' : 'Missing'}`);
+  console.log(`✅ jump-to-node handler in main.ts: ${hasJumpHandler ? 'Present' : 'Missing'}`);
+  console.log(`✅ Click handler in UI: ${hasClickHandler ? 'Present' : 'Missing'}`);
+  console.log(`✅ Hover effects in UI: ${hasHoverEffect ? 'Present' : 'Missing'}`);
+
+  if (hasJumpFunction && hasJumpHandler && hasClickHandler && hasHoverEffect) {
+    console.log('🎯 All jump functionality components are present!');
+  } else {
+    console.log('⚠️ Some jump functionality components are missing');
+  }
