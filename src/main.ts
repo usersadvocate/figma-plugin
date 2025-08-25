@@ -996,21 +996,25 @@ async function analyzeSectionContent(
       const allNodes = frame.findAll() as SceneNode[];
       console.log(`Total nodes in frame: ${allNodes.length}`);
 
-      // Count text nodes
-      const textNodes = allNodes.filter((node) => node.type === "TEXT");
-      console.log("Text nodes in frame:", textNodes.length);
+      // Filter out invisible nodes
+      const visibleNodes = allNodes.filter((node) => node.visible !== false);
+      console.log(`Visible nodes in frame: ${visibleNodes.length} (filtered ${allNodes.length - visibleNodes.length} invisible nodes)`);
+
+      // Count text nodes (only visible ones)
+      const textNodes = visibleNodes.filter((node) => node.type === "TEXT");
+      console.log("Visible text nodes in frame:", textNodes.length);
 
       const frameInfo: FrameInfo = {
         id: frame.id,
         name: frame.name,
-        totalNodes: allNodes.length,
+        totalNodes: visibleNodes.length,
         textNodesCount: textNodes.length,
-        nodes: await Promise.all(allNodes.map(analyzeNode)),
+        nodes: await Promise.all(visibleNodes.map(analyzeNode)),
       };
 
       frames.push(frameInfo);
       totalTextNodes += textNodes.length;
-      totalNodes += allNodes.length;
+      totalNodes += visibleNodes.length;
     }
 
     const result = {
