@@ -179,7 +179,16 @@ const DESIGN_PROPERTY_GROUPS = {
     "bottomRightRadius",
     "cornerSmoothing",
   ],
-  effects: ["effects"],
+  effects: [
+    "effects",
+    // Individual effect properties that can have variable bindings
+    "effect.color",
+    "effect.offsetX",
+    "effect.offsetY",
+    "effect.radius",
+    "effect.spread",
+    "effect.blur",
+  ],
   advanced: [
     "rotation",
     "fillStyleId",
@@ -215,6 +224,12 @@ function getPropertyGroup(property: string): PropertyGroup {
       return group as PropertyGroup;
     }
   }
+
+  // Handle nested effect properties
+  if (property.startsWith("effect.")) {
+    return "effects";
+  }
+
   return "advanced"; // fallback
 }
 
@@ -284,7 +299,7 @@ async function extractVariableBindings(
 
     console.log(
       `🔍 Checking node "${node.name}" (${node.type}) for bound variables:`,
-      boundVars
+      JSON.stringify(boundVars, null, 2)
     );
 
     if (!boundVars || typeof boundVars !== "object") {
@@ -292,15 +307,75 @@ async function extractVariableBindings(
       return bindings;
     }
 
-    // Iterate through all design properties
+    // Special handling for effects - check both array and nested properties
+    const effectsBinding = boundVars["effects"];
+    if (effectsBinding) {
+      console.log(`✨ Found effects binding:`, effectsBinding);
+
+      try {
+        if (Array.isArray(effectsBinding)) {
+          for (let i = 0; i < effectsBinding.length; i++) {
+            const effectBind = effectsBinding[i];
+            if (effectBind && effectBind.id) {
+              // Overall effect binding
+              const varInfo = await getVariableInfo(effectBind.id);
+              if (varInfo) {
+                bindings.push({
+                  property: "effects",
+                  propertyGroup: "effects",
+                  variableId: effectBind.id,
+                  variableName: varInfo.name,
+                  collectionName: varInfo.collectionName,
+                  bindingType: "array",
+                  arrayIndex: i,
+                });
+              }
+            } else if (effectBind && typeof effectBind === "object") {
+              // Check for individual effect property bindings
+              const effectProperties = [
+                "color",
+                "offsetX",
+                "offsetY",
+                "radius",
+                "spread",
+                "blur",
+              ];
+              for (const effectProp of effectProperties) {
+                const nestedBinding = effectBind[effectProp];
+                if (nestedBinding && nestedBinding.id) {
+                  const varInfo = await getVariableInfo(nestedBinding.id);
+                  if (varInfo) {
+                    bindings.push({
+                      property: `effect.${effectProp}`,
+                      propertyGroup: "effects",
+                      variableId: nestedBinding.id,
+                      variableName: varInfo.name,
+                      collectionName: varInfo.collectionName,
+                      bindingType: "array",
+                      arrayIndex: i,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("💥 Error processing effects binding:", error);
+      }
+    }
+
+    // Iterate through all other design properties
     for (const prop of DESIGN_PROPERTIES) {
+      if (prop === "effects") continue; // Skip effects as we handled it above
+
       const binding = boundVars[prop];
       if (!binding) continue;
 
       console.log(`📌 Found binding for property "${prop}":`, binding);
 
       try {
-        // Handle array bindings (like fills, strokes, effects)
+        // Handle array bindings (like fills, strokes)
         if (Array.isArray(binding)) {
           for (let i = 0; i < binding.length; i++) {
             const bind = binding[i];
