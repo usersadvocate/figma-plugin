@@ -1,0 +1,279 @@
+# Linter Project Development Rules
+
+## 🎯 Rule #1: Always Resolve Problems After Code Updates
+
+**Status: ACTIVE** | **Priority: CRITICAL**
+
+### Automated Resolution Process:
+
+1. **Build the project** after every code change
+   ```bash
+   npm run build
+   ```
+2. **Run linting** and fix issues automatically
+   ```bash
+   npx eslint src/main.ts --fix
+   ```
+3. **Verify compilation** - ensure no TypeScript errors
+4. **Test in Figma** - reload plugin and verify functionality
+
+### Manual Checks:
+
+- [ ] All TypeScript compilation errors resolved
+- [ ] All ESLint errors fixed (warnings acceptable if documented)
+- [ ] Plugin loads successfully in Figma
+- [ ] Core functionality works as expected
+
+---
+
+## 🏗️ Rule #2: Code Quality Standards
+
+**Status: ACTIVE** | **Priority: HIGH**
+
+### TypeScript Requirements:
+
+- [ ] No `any` types without proper justification
+- [ ] All imports must be used or removed
+- [ ] All variables must be used or prefixed with `_`
+- [ ] Functions must have proper return types
+- [ ] Async functions must handle errors appropriately
+
+### Naming Conventions:
+
+- [ ] Functions: camelCase
+- [ ] Interfaces: PascalCase
+- [ ] Types: PascalCase
+- [ ] Constants: SCREAMING_SNAKE_CASE
+- [ ] Files: kebab-case
+
+### Documentation:
+
+- [ ] Complex functions must have JSDoc comments
+- [ ] Public APIs must be documented
+- [ ] TODO comments must be tracked and resolved
+
+---
+
+## 🚀 Rule #3: Build and Deployment
+
+**Status: ACTIVE** | **Priority: HIGH**
+
+### Build Process:
+
+- [ ] Always build before committing changes
+- [ ] Verify build output in `dist/` directory
+- [ ] Test plugin in Figma after build
+- [ ] Update version in package.json for releases
+
+### File Structure:
+
+```
+dist/
+  ├── code.js        # Compiled plugin code
+  └── ui.html        # Plugin UI interface
+src/
+  ├── main.ts        # Main plugin logic
+  ├── services/      # Business logic modules
+  └── ui/            # User interface files
+```
+
+---
+
+## 🧪 Rule #4: Testing and Validation
+
+**Status: ACTIVE** | **Priority: MEDIUM**
+
+### Manual Testing Checklist:
+
+- [ ] Plugin loads without errors in Figma
+- [ ] UI renders correctly
+- [ ] Section detection works
+- [ ] Variable resolution displays correctly
+- [ ] Shape property analysis functions
+- [ ] Error handling works gracefully
+
+### Performance Testing:
+
+- [ ] Plugin responds within 2 seconds for typical sections
+- [ ] Memory usage remains reasonable
+- [ ] No blocking operations in main thread
+
+---
+
+## 📝 Rule #5: Commit and Documentation
+
+**Status: ACTIVE** | **Priority: MEDIUM**
+
+### Commit Message Format:
+
+```
+[type]: Brief description of changes
+
+- Detail 1
+- Detail 2
+- Fixes #issue-number
+```
+
+### Types:
+
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation changes
+- `style:` Code style changes
+- `refactor:` Code refactoring
+- `test:` Adding tests
+- `chore:` Maintenance tasks
+
+### Documentation Requirements:
+
+- [ ] Update README.md for new features
+- [ ] Document breaking changes
+- [ ] Update API documentation if needed
+
+---
+
+## 🔧 Rule #6: Development Workflow
+
+**Status: ACTIVE** | **Priority: MEDIUM**
+
+### Daily Workflow:
+
+1. **Pull latest changes** from main branch
+2. **Create feature branch** for new work
+3. **Make changes** following coding standards
+4. **Resolve problems** (Rule #1)
+5. **Test thoroughly** in Figma
+6. **Commit with clear message**
+7. **Create pull request** for review
+
+### Code Review Checklist:
+
+- [ ] Code follows project rules
+- [ ] No unresolved ESLint issues
+- [ ] Tests pass (if applicable)
+- [ ] Documentation updated
+- [ ] Breaking changes documented
+
+---
+
+## 🚨 Rule #7: Error Handling and Logging
+
+**Status: ACTIVE** | **Priority: HIGH**
+
+### Error Handling Requirements:
+
+- [ ] All async operations must have try-catch blocks
+- [ ] User-facing errors must have helpful messages
+- [ ] Fallback behavior for failed operations
+- [ ] Graceful degradation when features fail
+
+### Logging Standards:
+
+- [ ] Use console.log for debugging (remove in production)
+- [ ] Use descriptive error messages
+- [ ] Include relevant context in error logs
+- [ ] Don't log sensitive information
+
+---
+
+## 🎨 Rule #8: UI/UX Standards
+
+**Status: ACTIVE** | **Priority: MEDIUM**
+
+### UI Requirements:
+
+- [ ] Consistent styling with design system
+- [ ] Responsive design for different screen sizes
+- [ ] Clear visual hierarchy
+- [ ] Loading states for async operations
+- [ ] Error states with helpful messages
+
+### Accessibility:
+
+- [ ] Sufficient color contrast
+- [ ] Keyboard navigation support
+- [ ] Screen reader compatibility
+- [ ] Clear focus indicators
+
+---
+
+## 📊 Rule #9: Performance Optimization
+
+**Status: ACTIVE** | **Priority: MEDIUM**
+
+### Performance Requirements:
+
+- [ ] Minimize API calls to Figma
+- [ ] Use efficient data structures
+- [ ] Avoid blocking operations
+- [ ] Cache results when appropriate
+- [ ] Lazy load heavy operations
+
+### Metrics to Monitor:
+
+- [ ] Plugin load time
+- [ ] Analysis speed
+- [ ] Memory usage
+- [ ] API call frequency
+
+---
+
+## 🔄 Rule #10: Maintenance and Updates
+
+**Status: ACTIVE** | **Priority: LOW**
+
+### Regular Maintenance Tasks:
+
+- [ ] Update dependencies quarterly
+- [ ] Review and update Node.js version
+- [ ] Test with latest Figma features
+- [ ] Update documentation
+- [ ] Clean up unused code
+
+### Deprecation Handling:
+
+- [ ] Mark deprecated features clearly
+- [ ] Provide migration guides
+- [ ] Maintain backward compatibility
+- [ ] Remove deprecated code in major versions
+
+---
+
+## 📋 Rule Compliance Checklist
+
+**Use this before committing:**
+
+### Pre-Commit Checklist:
+
+- [ ] **Rule #1**: Problems resolved after code updates
+- [ ] **Rule #2**: Code quality standards met
+- [ ] **Rule #3**: Build successful and tested
+- [ ] **Rule #4**: Basic functionality tested
+- [ ] **Rule #5**: Commit message follows format
+- [ ] No critical security issues
+- [ ] No broken functionality
+
+---
+
+## 🚨 Emergency Rules
+
+**Only break these rules if absolutely necessary:**
+
+1. **Never** commit broken builds to main branch
+2. **Never** expose sensitive user data
+3. **Never** remove error handling without replacement
+4. **Never** break existing functionality without migration path
+5. **Never** ignore critical security vulnerabilities
+
+---
+
+## 📞 Contact and Support
+
+- **Lead Developer:** Julia Pchelova
+- **Project Repository:** [GitHub Link]
+- **Issues:** Use GitHub Issues for bug reports and feature requests
+- **Discussions:** Use GitHub Discussions for questions and ideas
+
+---
+
+_These rules are living guidelines and can be updated as the project evolves. Always use best judgment and document any rule exceptions._

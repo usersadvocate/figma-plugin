@@ -2,22 +2,28 @@
 figma.showUI(__html__, { width: 500, height: 400 });
 
 // Imports from modules
-import { getSections, getSelectedSectionId } from './services/sections';
-import type { SectionInfo } from './services/sections';
+import { getSections, getSelectedSectionId } from "./services/sections";
+import type { SectionInfo } from "./services/sections";
 
 // Analysis types
+interface NodeInfo {
+  id: string;
+  name: string;
+  type: string;
+  characters?: string; // Only for text nodes
+  variableBindings: VariableBinding[];
+  groupedBindings: GroupedBindings;
+  hasBoundVariables: boolean;
+  boundVariableDetails?: string;
+  propertyDetails: string[];
+}
+
 interface FrameInfo {
   id: string;
   name: string;
+  totalNodes: number;
   textNodesCount: number;
-  textNodes: {
-    id: string;
-    name: string;
-    characters: string;
-    hasBoundVariables: boolean;
-    boundVariableDetails?: string;
-    propertyDetails: string[];
-  }[];
+  nodes: NodeInfo[];
 }
 
 interface SectionAnalysis {
@@ -25,33 +31,36 @@ interface SectionAnalysis {
   sectionName: string;
   totalFrames: number;
   totalTextNodes: number;
+  totalNodes: number;
   frames: FrameInfo[];
 }
 
 // Handle messages from the UI
 figma.ui.onmessage = async (msg) => {
-  if (msg.type === 'get-sections') {
+  if (msg.type === "get-sections") {
     const sections = getSections();
     const selectedSectionId = getSelectedSectionId();
-    figma.ui.postMessage({ type: 'sections-loaded', sections, selectedSectionId });
+    figma.ui.postMessage({
+      type: "sections-loaded",
+      sections,
+      selectedSectionId,
+    });
   }
-  
-  if (msg.type === 'analyze-section') {
-    const analysis = await analyzeSectionContent(msg.sectionId);
-    figma.ui.postMessage({ type: 'section-analysis', analysis });
-  }
-  
 
-  
-  if (msg.type === 'cancel') {
+  if (msg.type === "analyze-section") {
+    const analysis = await analyzeSectionContent(msg.sectionId);
+    figma.ui.postMessage({ type: "section-analysis", analysis });
+  }
+
+  if (msg.type === "cancel") {
     figma.closePlugin();
   }
 };
 
 // Listen for selection changes and notify UI with the current section
-figma.on('selectionchange', () => {
+figma.on("selectionchange", () => {
   const sectionId = getSelectedSectionId();
-  figma.ui.postMessage({ type: 'selection-section', sectionId });
+  figma.ui.postMessage({ type: "selection-section", sectionId });
 });
 
 // Debounced broadcaster for sections list
@@ -63,23 +72,29 @@ function refreshSectionsDebounced() {
     pendingSectionsRefresh = false;
     const sections = getSections();
     const selectedSectionId = getSelectedSectionId();
-    figma.ui.postMessage({ type: 'sections-loaded', sections, selectedSectionId });
+    figma.ui.postMessage({
+      type: "sections-loaded",
+      sections,
+      selectedSectionId,
+    });
   }, 150);
 }
 
 // Refresh sections when current page changes
-figma.on('currentpagechange', () => {
+figma.on("currentpagechange", () => {
   refreshSectionsDebounced();
 });
 
 // Try to track document changes (create/delete/rename/move of sections)
 function attachDocumentChangeListener() {
   const handler = (evt: any) => {
-    const changes = (evt as any).documentChanges as ReadonlyArray<any> | undefined;
+    const changes = (evt as any).documentChanges as
+      | ReadonlyArray<any>
+      | undefined;
     if (!changes || changes.length === 0) return;
     for (const ch of changes) {
       const node = ch.node as BaseNode | undefined;
-      if (node && node.type === 'SECTION') {
+      if (node && node.type === "SECTION") {
         refreshSectionsDebounced();
         return;
       }
@@ -88,11 +103,11 @@ function attachDocumentChangeListener() {
 
   try {
     const loadAllPagesAsync = (figma as any).loadAllPagesAsync;
-    if (typeof loadAllPagesAsync === 'function') {
+    if (typeof loadAllPagesAsync === "function") {
       loadAllPagesAsync()
         .then(() => {
           try {
-            figma.on('documentchange', handler);
+            figma.on("documentchange", handler);
           } catch (e) {
             startSectionsPolling();
           }
@@ -102,7 +117,7 @@ function attachDocumentChangeListener() {
         });
     } else {
       try {
-        figma.on('documentchange', handler);
+        figma.on("documentchange", handler);
       } catch (e) {
         startSectionsPolling();
       }
@@ -122,28 +137,218 @@ function startSectionsPolling() {
 
 attachDocumentChangeListener();
 
-// Helper function to resolve variable name and collection
-async function getVariableInfo(variableId: string): Promise<string> {
-  try {
-    console.log('🔍 Resolving variable ID:', variableId);
-    const variable = await figma.variables.getVariableByIdAsync(variableId);
-    console.log('📦 Variable object:', variable);
-    
-    if (!variable) {
-      console.log('❌ Variable not found for ID:', variableId);
-      return `Unknown Variable (${variableId.substring(0, 10)}...)`;
+// Define comprehensive design properties grouped by category
+const DESIGN_PROPERTY_GROUPS = {
+  text: [
+    "fontSize",
+    "lineHeight",
+    "letterSpacing",
+    "textStyleId",
+    "fills", // text color
+  ],
+  layout: [
+    "width",
+    "height",
+    "minWidth",
+    "maxWidth",
+    "minHeight",
+    "maxHeight",
+    "itemSpacing",
+    "paddingTop",
+    "paddingRight",
+    "paddingBottom",
+    "paddingLeft",
+  ],
+  styling: [
+    "fills",
+    "strokes",
+    "strokeWeight",
+    "strokeAlign",
+    "strokeJoin",
+    "strokeMiterLimit",
+    "strokeCap",
+    "opacity",
+    "blendMode",
+    "isMask",
+  ],
+  shape: [
+    "cornerRadius",
+    "topLeftRadius",
+    "topRightRadius",
+    "bottomLeftRadius",
+    "bottomRightRadius",
+    "cornerSmoothing",
+  ],
+  effects: ["effects"],
+  advanced: [
+    "rotation",
+    "fillStyleId",
+    "strokeStyleId",
+    "componentProperties",
+    "exposedInstances",
+  ],
+} as const;
+
+type PropertyGroup = keyof typeof DESIGN_PROPERTY_GROUPS;
+
+// Flatten all properties for iteration
+const DESIGN_PROPERTIES = Object.values(
+  DESIGN_PROPERTY_GROUPS
+).flat() as readonly string[];
+
+type DesignProperty = (typeof DESIGN_PROPERTIES)[number];
+
+interface VariableBinding {
+  property: DesignProperty;
+  propertyGroup: PropertyGroup;
+  variableId: string;
+  variableName: string;
+  collectionName: string;
+  bindingType: "single" | "array";
+  arrayIndex?: number;
+}
+
+// Helper function to get property group for a given property
+function getPropertyGroup(property: string): PropertyGroup {
+  for (const [group, properties] of Object.entries(DESIGN_PROPERTY_GROUPS)) {
+    if ((properties as readonly string[]).includes(property)) {
+      return group as PropertyGroup;
     }
-    
-    const collection = await figma.variables.getVariableCollectionByIdAsync(variable.variableCollectionId);
-    console.log('📁 Collection object:', collection);
-    const collectionName = collection ? collection.name : 'Unknown Collection';
-    
-    const result = `${variable.name} (${collectionName})`;
-    console.log('✅ Resolved variable info:', result);
-    return result;
+  }
+  return "advanced"; // fallback
+}
+
+// Group bindings by category
+interface GroupedBindings {
+  text: VariableBinding[];
+  layout: VariableBinding[];
+  styling: VariableBinding[];
+  shape: VariableBinding[];
+  effects: VariableBinding[];
+  advanced: VariableBinding[];
+}
+
+// Helper function to resolve variable name and collection
+async function getVariableInfo(
+  variableId: string
+): Promise<{ name: string; collectionName: string } | null> {
+  try {
+    console.log("🔍 Resolving variable ID:", variableId);
+    const variable = await figma.variables.getVariableByIdAsync(variableId);
+    console.log("📦 Variable object:", variable);
+
+    if (!variable) {
+      console.log("❌ Variable not found for ID:", variableId);
+      return null;
+    }
+
+    const collection = await figma.variables.getVariableCollectionByIdAsync(
+      variable.variableCollectionId
+    );
+    console.log("📁 Collection object:", collection);
+    const collectionName = collection ? collection.name : "Unknown Collection";
+
+    return {
+      name: variable.name,
+      collectionName,
+    };
   } catch (error) {
-    console.error('💥 Error resolving variable:', variableId, error);
-    return `Error Variable (${variableId.substring(0, 10)}...)`;
+    console.error("💥 Error resolving variable:", variableId, error);
+    return null;
+  }
+}
+
+// Universal function to extract variable bindings from any SceneNode
+async function extractVariableBindings(
+  node: SceneNode
+): Promise<VariableBinding[]> {
+  const bindings: VariableBinding[] = [];
+
+  try {
+    // Get bound variables - try different access patterns
+    let boundVars: any = {};
+
+    // Method 1: Direct property access (most common)
+    if ("boundVariables" in node) {
+      boundVars = (node as any).boundVariables || {};
+    }
+
+    // Method 2: Check if it's a container node that might have bound variables
+    if (!Object.keys(boundVars).length && "children" in node) {
+      // For container nodes, bound variables might be on individual properties
+      const containerNode = node as FrameNode | ComponentNode | InstanceNode;
+      if (containerNode.boundVariables) {
+        boundVars = containerNode.boundVariables;
+      }
+    }
+
+    console.log(
+      `🔍 Checking node "${node.name}" (${node.type}) for bound variables:`,
+      boundVars
+    );
+
+    if (!boundVars || typeof boundVars !== "object") {
+      console.log("⚠️ No bound variables found on node");
+      return bindings;
+    }
+
+    // Iterate through all design properties
+    for (const prop of DESIGN_PROPERTIES) {
+      const binding = boundVars[prop];
+      if (!binding) continue;
+
+      console.log(`📌 Found binding for property "${prop}":`, binding);
+
+      try {
+        // Handle array bindings (like fills, strokes, effects)
+        if (Array.isArray(binding)) {
+          for (let i = 0; i < binding.length; i++) {
+            const bind = binding[i];
+            if (bind && bind.id) {
+              const varInfo = await getVariableInfo(bind.id);
+              if (varInfo) {
+                bindings.push({
+                  property: prop,
+                  propertyGroup: getPropertyGroup(prop),
+                  variableId: bind.id,
+                  variableName: varInfo.name,
+                  collectionName: varInfo.collectionName,
+                  bindingType: "array",
+                  arrayIndex: i,
+                });
+              }
+            }
+          }
+        }
+        // Handle single bindings
+        else if (binding && binding.id) {
+          const varInfo = await getVariableInfo(binding.id);
+          if (varInfo) {
+            bindings.push({
+              property: prop,
+              propertyGroup: getPropertyGroup(prop),
+              variableId: binding.id,
+              variableName: varInfo.name,
+              collectionName: varInfo.collectionName,
+              bindingType: "single",
+            });
+          }
+        }
+      } catch (error) {
+        console.error(
+          `💥 Error processing binding for property "${prop}":`,
+          error
+        );
+      }
+    }
+
+    console.log(
+      `✅ Found ${bindings.length} variable bindings for node "${node.name}"`
+    );
+    return bindings;
+  } catch (error) {
+    console.error("💥 Error extracting variable bindings:", error);
+    return bindings;
   }
 }
 
@@ -151,152 +356,128 @@ async function getVariableInfo(variableId: string): Promise<string> {
 async function getTextStyleInfo(textStyleId: string): Promise<string> {
   try {
     const textStyle = await figma.getStyleByIdAsync(textStyleId);
-    if (!textStyle) return 'Unknown Style';
+    if (!textStyle) return "Unknown Style";
     return textStyle.name;
   } catch (error) {
-    console.error('Error resolving text style:', textStyleId, error);
-    return 'Unknown Style';
+    console.error("Error resolving text style:", textStyleId, error);
+    return "Unknown Style";
   }
 }
 
-// Helper function to check bound variables and text styles for a text node
-async function checkTextNodeBoundVariables(textNode: TextNode): Promise<{ hasBoundVariables: boolean; details: string; propertyDetails: string[] }> {
-  const boundVars = textNode.boundVariables;
-  console.log(`Checking text node "${textNode.name}":`, boundVars);
-  console.log(`Text style ID:`, textNode.textStyleId);
-  
-  const propertyDetails: string[] = [];
-  let hasAnyDesignSystemUsage = false;
-  
-  // Detection Rules:
-  // 1. Variables (boundVariables) take precedence
-  // 2. Text Style (textStyleId) as one unit for typography
-  // 3. Manual is fallback (neither Variables nor Text Style)
-  
-  // First, check if there's a Text Style applied
-  if (textNode.textStyleId && typeof textNode.textStyleId === 'string') {
-    const styleName = await getTextStyleInfo(textNode.textStyleId);
-    propertyDetails.push(`textStyle: Text Style (${styleName})`);
-    hasAnyDesignSystemUsage = true;
-  }
-  
-  // Then check individual property overrides with Variables
-  if (boundVars && boundVars.fontSize && Array.isArray(boundVars.fontSize) && boundVars.fontSize.length > 0) {
-    const fontSize = boundVars.fontSize[0];
-    const varInfo = await getVariableInfo(fontSize.id);
-    propertyDetails.push(`fontSize: Variable (${varInfo})`);
-    hasAnyDesignSystemUsage = true;
-  }
-  
-  if (boundVars && boundVars.lineHeight && Array.isArray(boundVars.lineHeight) && boundVars.lineHeight.length > 0) {
-    const lineHeight = boundVars.lineHeight[0];
-    const varInfo = await getVariableInfo(lineHeight.id);
-    propertyDetails.push(`lineHeight: Variable (${varInfo})`);
-    hasAnyDesignSystemUsage = true;
-  }
-  
-  if (boundVars && boundVars.letterSpacing && Array.isArray(boundVars.letterSpacing) && boundVars.letterSpacing.length > 0) {
-    const letterSpacing = boundVars.letterSpacing[0];
-    const varInfo = await getVariableInfo(letterSpacing.id);
-    propertyDetails.push(`letterSpacing: Variable (${varInfo})`);
-    hasAnyDesignSystemUsage = true;
-  }
-  
-  // If no Text Style and no Variables for typography, show Manual
-  if (!textNode.textStyleId && 
-      (!boundVars || 
-       (!boundVars.fontSize || !Array.isArray(boundVars.fontSize) || boundVars.fontSize.length === 0) &&
-       (!boundVars.lineHeight || !Array.isArray(boundVars.lineHeight) || boundVars.lineHeight.length === 0) &&
-       (!boundVars.letterSpacing || !Array.isArray(boundVars.letterSpacing) || boundVars.letterSpacing.length === 0))) {
-    propertyDetails.push(`typography: Manual`);
-  }
-  
-  // Check fills (text color)
-  if (boundVars && boundVars.fills && boundVars.fills.length > 0) {
-    for (let i = 0; i < boundVars.fills.length; i++) {
-      const fillVar = boundVars.fills[i];
-      if (fillVar) {
-        const varInfo = await getVariableInfo(fillVar.id);
-        propertyDetails.push(`fills[${i}]: Variable (${varInfo})`);
-        hasAnyDesignSystemUsage = true;
-      }
-    }
-  } else if (textNode.fillStyleId && typeof textNode.fillStyleId === 'string') {
-    try {
-      const paintStyle = await figma.getStyleByIdAsync(textNode.fillStyleId);
-      const styleName = paintStyle ? paintStyle.name : 'Unknown Style';
-      propertyDetails.push(`fills: Paint Style (${styleName})`);
-      hasAnyDesignSystemUsage = true;
-    } catch (error) {
-      propertyDetails.push(`fills: Manual`);
-    }
-  } else {
-    propertyDetails.push(`fills: Manual`);
-  }
-  
-  // Check opacity (separate from text style)
-  if (boundVars && boundVars.opacity && Array.isArray(boundVars.opacity) && boundVars.opacity.length > 0) {
-    const opacity = boundVars.opacity[0];
-    const varInfo = await getVariableInfo(opacity.id);
-    propertyDetails.push(`opacity: Variable (${varInfo})`);
-    hasAnyDesignSystemUsage = true;
-  } else {
-    propertyDetails.push(`opacity: Manual`);
-  }
-
-  return {
-    hasBoundVariables: hasAnyDesignSystemUsage,
-    details: propertyDetails.join(', '),
-    propertyDetails
+// Helper function to group bindings by category
+function groupBindings(bindings: VariableBinding[]): GroupedBindings {
+  const grouped: GroupedBindings = {
+    text: [],
+    layout: [],
+    styling: [],
+    shape: [],
+    effects: [],
+    advanced: [],
   };
+
+  for (const binding of bindings) {
+    grouped[binding.propertyGroup].push(binding);
+  }
+
+  return grouped;
 }
 
+// Helper function to analyze any scene node for variable bindings
+async function analyzeNode(node: SceneNode): Promise<NodeInfo> {
+  const variableBindings = await extractVariableBindings(node);
+  const hasBoundVariables = variableBindings.length > 0;
+  const groupedBindings = groupBindings(variableBindings);
 
+  // Create property details for display
+  const propertyDetails: string[] = [];
 
-async function analyzeSectionContent(sectionId: string): Promise<SectionAnalysis | null> {
+  if (variableBindings.length > 0) {
+    for (const binding of variableBindings) {
+      const propertyName =
+        binding.bindingType === "array"
+          ? `${binding.property}[${binding.arrayIndex}]`
+          : binding.property;
+      propertyDetails.push(
+        `${propertyName}: Variable (${binding.variableName} from ${binding.collectionName})`
+      );
+    }
+  } else {
+    propertyDetails.push("No variable bindings found");
+  }
+
+  const nodeInfo: NodeInfo = {
+    id: node.id,
+    name: node.name,
+    type: node.type,
+    variableBindings,
+    groupedBindings,
+    hasBoundVariables,
+    boundVariableDetails: propertyDetails.join(", "),
+    propertyDetails,
+  };
+
+  // Add text content for text nodes
+  if (node.type === "TEXT") {
+    const textNode = node as TextNode;
+    nodeInfo.characters = textNode.characters
+      ? textNode.characters.substring(0, 50) +
+        (textNode.characters.length > 50 ? "..." : "")
+      : "";
+  }
+
+  return nodeInfo;
+}
+
+async function analyzeSectionContent(
+  sectionId: string
+): Promise<SectionAnalysis | null> {
   try {
-    console.log('Analyzing section with ID:', sectionId);
+    console.log("Analyzing section with ID:", sectionId);
     const section = await figma.getNodeByIdAsync(sectionId);
-    console.log('Found node:', section && section.type, section && section.name);
-    
-    if (!section || section.type !== 'SECTION') {
-      console.error('Node is not a section:', section && section.type);
+    console.log(
+      "Found node:",
+      section && section.type,
+      section && section.name
+    );
+
+    if (!section || section.type !== "SECTION") {
+      console.error("Node is not a section:", section && section.type);
       return null;
     }
 
     const frames: FrameInfo[] = [];
     let totalTextNodes = 0;
+    let totalNodes = 0;
 
     // Find all direct children of the section (not just frames)
-    console.log('Section children:', section.children.length);
-    const frameChildren = section.children.filter(child => child.type === 'FRAME') as FrameNode[];
-    console.log('Frame children found:', frameChildren.length);
-    
+    console.log("Section children:", section.children.length);
+    const frameChildren = section.children.filter(
+      (child) => child.type === "FRAME"
+    ) as FrameNode[];
+    console.log("Frame children found:", frameChildren.length);
+
     for (const frame of frameChildren) {
-      console.log('Processing frame:', frame.name);
-      // Find all text nodes within this frame
-      const textNodes = frame.findAll(node => node.type === 'TEXT') as TextNode[];
-      console.log('Text nodes in frame:', textNodes.length);
-      
+      console.log("Processing frame:", frame.name);
+
+      // Find all nodes within this frame (not just text nodes)
+      const allNodes = frame.findAll() as SceneNode[];
+      console.log(`Total nodes in frame: ${allNodes.length}`);
+
+      // Count text nodes
+      const textNodes = allNodes.filter((node) => node.type === "TEXT");
+      console.log("Text nodes in frame:", textNodes.length);
+
       const frameInfo: FrameInfo = {
         id: frame.id,
         name: frame.name,
+        totalNodes: allNodes.length,
         textNodesCount: textNodes.length,
-        textNodes: await Promise.all(textNodes.map(async (textNode) => {
-          const { hasBoundVariables, details, propertyDetails } = await checkTextNodeBoundVariables(textNode);
-          return {
-            id: textNode.id,
-            name: textNode.name,
-            characters: textNode.characters ? textNode.characters.substring(0, 50) + (textNode.characters.length > 50 ? '...' : '') : '',
-            hasBoundVariables,
-            boundVariableDetails: details,
-            propertyDetails
-          };
-        }))
+        nodes: await Promise.all(allNodes.map(analyzeNode)),
       };
-      
+
       frames.push(frameInfo);
       totalTextNodes += textNodes.length;
+      totalNodes += allNodes.length;
     }
 
     const result = {
@@ -304,13 +485,14 @@ async function analyzeSectionContent(sectionId: string): Promise<SectionAnalysis
       sectionName: section.name,
       totalFrames: frameChildren.length,
       totalTextNodes,
-      frames
+      totalNodes,
+      frames,
     };
-    
-    console.log('Analysis result:', result);
+
+    console.log("Analysis result:", result);
     return result;
   } catch (error) {
-    console.error('Error analyzing section:', error);
+    console.error("Error analyzing section:", error);
     return null;
   }
 }

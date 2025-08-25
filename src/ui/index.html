@@ -209,71 +209,131 @@
     
     function displayAnalysis(analysis) {
       const container = document.getElementById('analysis-results');
-      
+
       if (!analysis) {
         container.innerHTML = '<div class="loading">❌ Failed to analyze section</div>';
         return;
       }
-      
+
       let html = `
         <div class="no-issues">
           <strong>${analysis.sectionName}</strong><br>
-          📁 ${analysis.totalFrames} frames, 📝 ${analysis.totalTextNodes} text nodes
+          📁 ${analysis.totalFrames} frames, 📝 ${analysis.totalTextNodes} text nodes, 🔗 ${analysis.totalNodes} total nodes
         </div>
       `;
-      
+
       if (analysis.frames.length > 0) {
         html += '<div style="margin-top: 12px;">';
         for (const frame of analysis.frames) {
+          // Count nodes with variables
+          const nodesWithVariables = frame.nodes.filter(node => node.hasBoundVariables).length;
+
+          // Calculate variable usage by category
+          const categoryCounts = { text: 0, layout: 0, styling: 0, shape: 0, effects: 0, advanced: 0 };
+          for (const node of frame.nodes) {
+            if (node.hasBoundVariables) {
+              for (const [category, bindings] of Object.entries(node.groupedBindings)) {
+                categoryCounts[category] += bindings.length;
+              }
+            }
+          }
+
+          const categorySummary = Object.entries(categoryCounts)
+            .filter(([_, count]) => count > 0)
+            .map(([category, count]) => `${category}: ${count}`)
+            .join(', ');
+
           html += `
             <div class="issue-item">
               <div class="issue-header">
                 <div class="issue-title">🖼️ ${frame.name}</div>
-                <div style="font-size: 12px;">${frame.textNodesCount} text nodes</div>
+                <div style="font-size: 12px;">${frame.totalNodes} nodes (${frame.textNodesCount} text) • ${nodesWithVariables} with variables</div>
               </div>
+              ${categorySummary ? `<div style="font-size: 11px; color: #666; margin-bottom: 8px;">📊 Variables by category: ${categorySummary}</div>` : ''}
           `;
-          
-          if (frame.textNodes.length > 0) {
+
+          if (frame.nodes.length > 0) {
             html += '<div style="margin-top: 8px; font-size: 11px;">';
-            for (const textNode of frame.textNodes) {
-              html += `<div style="margin: 4px 0; padding: 6px; background: #f9f9f9; border-radius: 3px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <span style="font-weight: 600;">"${textNode.characters}"</span>
-                </div>`;
-              
-              // Show individual property details with detection rules
-              if (textNode.propertyDetails && textNode.propertyDetails.length > 0) {
+            for (const node of frame.nodes) {
+              // Get node type emoji
+              let nodeEmoji = '📄'; // Default
+              if (node.type === 'TEXT') nodeEmoji = '📝';
+              else if (node.type === 'FRAME') nodeEmoji = '🖼️';
+              else if (node.type === 'RECTANGLE') nodeEmoji = '⬜';
+              else if (node.type === 'ELLIPSE') nodeEmoji = '⭕';
+              else if (node.type === 'COMPONENT') nodeEmoji = '🧩';
+              else if (node.type === 'INSTANCE') nodeEmoji = '🔗';
+
+              // Create node display
+              const nodeTitle = node.characters ? `"${node.characters}"` : node.name;
+              const variableCount = node.variableBindings.length;
+
+              html += `<div style="margin: 4px 0; padding: 8px; background: ${node.hasBoundVariables ? '#e8f5e8' : '#f9f9f9'}; border-radius: 3px; border-left: 3px solid ${node.hasBoundVariables ? '#4caf50' : '#ddd'};">`;
+
+              // Node header
+              html += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600;">${nodeEmoji} ${nodeTitle}</span>
+                <span style="font-size: 10px; color: #666;">${node.type} ${variableCount > 0 ? `• ${variableCount} vars` : ''}</span>
+              </div>`;
+
+              // Show grouped variable bindings
+              if (node.hasBoundVariables && node.variableBindings.length > 0) {
                 html += '<div style="font-size: 10px; line-height: 1.4;">';
-                for (const property of textNode.propertyDetails) {
-                  let color = '#666'; // Manual (default)
-                  let icon = '⚪'; // Manual
-                  
-                  if (property.includes('Variable')) {
-                    color = '#4caf50'; // Green for Variables
-                    icon = '🟢'; // Variable
-                  } else if (property.includes('Text Style') || property.includes('Paint Style')) {
-                    color = '#2196f3'; // Blue for Styles
-                    icon = '🔵'; // Style
+
+                const groupIcons = {
+                  text: '📝',
+                  layout: '📐',
+                  styling: '🎨',
+                  shape: '🔷',
+                  effects: '✨',
+                  advanced: '⚙️'
+                };
+
+                const groupNames = {
+                  text: 'Text',
+                  layout: 'Layout',
+                  styling: 'Styling',
+                  shape: 'Shape',
+                  effects: 'Effects',
+                  advanced: 'Advanced'
+                };
+
+                for (const [group, bindings] of Object.entries(node.groupedBindings)) {
+                  if (bindings.length > 0) {
+                    html += `<div style="margin: 4px 0; padding: 4px; background: rgba(76, 175, 80, 0.1); border-radius: 3px;">
+                      <div style="font-weight: bold; color: #4caf50; font-size: 9px; margin-bottom: 2px;">
+                        ${groupIcons[group]} ${groupNames[group]} (${bindings.length})
+                      </div>`;
+
+                    for (const binding of bindings) {
+                      const propertyName = binding.bindingType === 'array'
+                        ? `${binding.property}[${binding.arrayIndex}]`
+                        : binding.property;
+
+                      html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 8px;">
+                        <strong>${propertyName}:</strong> ${binding.variableName} (${binding.collectionName})
+                      </div>`;
+                    }
+                    html += '</div>';
                   }
-                  
-                  html += `<div style="color: ${color}; margin: 2px 0; display: flex; align-items: center;">
-                    <span style="margin-right: 4px;">${icon}</span>
-                    <span>${property}</span>
-                  </div>`;
                 }
                 html += '</div>';
+              } else {
+                html += `<div style="font-size: 10px; color: #999; font-style: italic;">
+                  No variable bindings
+                </div>`;
               }
-              
+
               html += '</div>';
             }
             html += '</div>';
           }
-          
+
           html += '</div>';
         }
         html += '</div>';
       }
-      
+
       container.innerHTML = html;
     }
   </script>
