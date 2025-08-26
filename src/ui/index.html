@@ -2,99 +2,148 @@
 <html>
 <head>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+    
     body {
-      font-family: Inter, sans-serif;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
       margin: 0;
       padding: 16px;
-      background: #f5f5f5;
+      background: #f8f8f8;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #2a2a2a;
     }
     
     .container {
-      background: white;
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     h2 {
-      margin: 0 0 16px 0;
-      color: #333;
-      font-size: 18px;
-      font-weight: 600;
+      margin: 0 0 20px 0;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
     
     .section-selector {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
     }
     
     select {
       width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      background: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #2a2a2a;
+      box-sizing: border-box;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #888;
     }
     
     .scan-button {
       width: 100%;
-      padding: 12px;
-      background: #18a0fb;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
+      padding: 12px 16px;
+      background: #2a2a2a;
+      color: #ffffff;
+      border: 1px solid #2a2a2a;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
       font-weight: 500;
+      letter-spacing: 0.3px;
       cursor: pointer;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
     }
     
     .scan-button:hover {
-      background: #0d8ce0;
+      background: #1a1a1a;
+      border-color: #1a1a1a;
     }
     
     .scan-button:disabled {
-      background: #ccc;
+      background: #e0e0e0;
+      color: #999;
+      border-color: #e0e0e0;
       cursor: not-allowed;
     }
     
     .issues-container {
-      max-height: 300px;
+      max-height: 400px;
       overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      background: #fafafa;
     }
     
     .issue-item {
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      padding: 12px;
-      margin-bottom: 8px;
-      background: #fafafa;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 16px;
+      background: #ffffff;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    
+    .issue-item:last-child {
+      border-bottom: none;
     }
     
     .issue-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
+      align-items: flex-start;
+      margin-bottom: 12px;
     }
     
     .issue-title {
       font-weight: 500;
-      color: #d32f2f;
-      font-size: 14px;
+      color: #1a1a1a;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      margin: 0;
     }
     
     .fix-button {
-      padding: 4px 8px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      font-size: 12px;
+      padding: 6px 12px;
+      background: transparent;
+      color: #2a2a2a;
+      border: 1px solid #ccc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
       cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .fix-button:hover {
+      background: #2a2a2a;
+      color: #ffffff;
+      border-color: #2a2a2a;
     }
     
     .fix-button:disabled {
-      background: #bdbdbd;
+      background: #f5f5f5;
+      color: #999;
+      border-color: #e0e0e0;
       cursor: not-allowed;
     }
 
@@ -111,15 +160,54 @@
     
     .loading {
       text-align: center;
+      padding: 24px;
       color: #666;
-      font-size: 14px;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
     }
     
     .no-issues {
-      text-align: center;
-      color: #4caf50;
-      font-size: 14px;
-      padding: 20px;
+      padding: 24px;
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #2a2a2a;
+    }
+    
+    /* Technical diagram-inspired elements */
+    .node-type-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #e8e8e8;
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      margin-left: 8px;
+    }
+    
+    .variable-count {
+      background: #2a2a2a;
+      color: #ffffff;
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      margin-left: 8px;
+    }
+    
+    .component-badge {
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      color: #666;
     }
   </style>
 </head>
@@ -251,8 +339,7 @@
 
       let html = `
         <div class="no-issues">
-          <strong>${analysis.sectionName}</strong><br>
-          📁 ${analysis.totalFrames} frames, 📝 ${analysis.totalTextNodes} text nodes, 🔗 ${analysis.totalNodes} total nodes
+          <strong>${analysis.sectionName}</strong>
         </div>
       `;
 
