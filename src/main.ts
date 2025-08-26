@@ -6,6 +6,15 @@ import { getSections, getSelectedSectionId } from "./services/sections";
 import type { SectionInfo } from "./services/sections";
 
 // Analysis types
+interface ComponentInfo {
+  id: string;
+  name: string;
+  mainComponentId: string;
+  mainComponentName: string;
+  isRemote: boolean;
+  remoteLibrary?: string;
+}
+
 interface NodeInfo {
   id: string;
   name: string;
@@ -16,6 +25,7 @@ interface NodeInfo {
   hasBoundVariables: boolean;
   boundVariableDetails?: string;
   propertyDetails: string[];
+  componentInfo?: ComponentInfo; // Only for INSTANCE nodes
 }
 
 interface FrameInfo {
@@ -23,6 +33,10 @@ interface FrameInfo {
   name: string;
   totalNodes: number;
   textNodesCount: number;
+  instanceNodesCount: number;
+  componentNodesCount: number;
+  remoteComponentsCount: number;
+  localComponentsCount: number;
   nodes: NodeInfo[];
 }
 
@@ -32,6 +46,10 @@ interface SectionAnalysis {
   totalFrames: number;
   totalTextNodes: number;
   totalNodes: number;
+  totalInstanceNodes: number;
+  totalComponentNodes: number;
+  totalRemoteComponents: number;
+  totalLocalComponents: number;
   frames: FrameInfo[];
 }
 
@@ -58,6 +76,10 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "cancel") {
     figma.closePlugin();
+  }
+
+  if (msg.type === "debug-components") {
+    debugComponentDetection();
   }
 };
 
@@ -915,6 +937,86 @@ function groupBindings(bindings: VariableBinding[]): GroupedBindings {
   return grouped;
 }
 
+// Helper function to analyze component information for instance nodes
+async function analyzeComponentInfo(
+  node: InstanceNode
+): Promise<ComponentInfo | undefined> {
+  try {
+    // Use async method for dynamic-page document access
+    const mainComponent = await node.getMainComponentAsync();
+
+    if (!mainComponent) {
+      console.log(`❌ Instance "${node.name}" has no main component`);
+      return undefined;
+    }
+
+    const isRemote = mainComponent.remote;
+
+    console.log(`🔍 Analyzing component instance: "${node.name}"`);
+    console.log(
+      `   Main component: "${mainComponent.name}" (${mainComponent.id})`
+    );
+    console.log(`   Is remote: ${isRemote}`);
+
+    let remoteLibrary: string | undefined;
+    if (isRemote) {
+      // For now, we'll just mark it as remote without specific library name
+      // The library name detection could be added later if the API becomes available
+      remoteLibrary = "Remote Library";
+      console.log(`   Remote library: ${remoteLibrary}`);
+    }
+
+    return {
+      id: node.id,
+      name: node.name,
+      mainComponentId: mainComponent.id,
+      mainComponentName: mainComponent.name,
+      isRemote,
+      remoteLibrary,
+    };
+  } catch (error) {
+    console.error(
+      `💥 Error analyzing component info for "${node.name}":`,
+      error
+    );
+    return undefined;
+  }
+}
+
+// Helper function to analyze main component definitions
+async function analyzeMainComponentInfo(
+  node: ComponentNode
+): Promise<ComponentInfo | undefined> {
+  try {
+    const isRemote = node.remote;
+
+    console.log(`🔍 Analyzing main component definition: "${node.name}"`);
+    console.log(`   Is remote: ${isRemote}`);
+
+    let remoteLibrary: string | undefined;
+    if (isRemote) {
+      // For main components, we can also check if they're remote
+      remoteLibrary = "Remote Library";
+      console.log(`   Remote library: ${remoteLibrary}`);
+    }
+
+    return {
+      id: node.id,
+      name: node.name,
+      mainComponentId: node.id, // For main components, the mainComponent is itself
+      mainComponentName: node.name,
+      isRemote,
+      remoteLibrary,
+    };
+  } catch (error) {
+    console.error(
+      `💥 Error analyzing main component info for "${node.name}":`,
+      error
+    );
+    return undefined;
+  }
+}
+
 // Helper function to analyze any scene node for variable bindings
 async function analyzeNode(node: SceneNode): Promise<NodeInfo> {
   const variableBindings = await extractVariableBindings(node);
@@ -958,6 +1060,15 @@ async function analyzeNode(node: SceneNode): Promise<NodeInfo> {
       : "";
   }
 
+  // Add component information for instance nodes and main component definitions
+  if (node.type === "INSTANCE") {
+    const instanceNode = node as InstanceNode;
+    nodeInfo.componentInfo = await analyzeComponentInfo(instanceNode);
+  } else if (node.type === "COMPONENT") {
+    const componentNode = node as ComponentNode;
+    nodeInfo.componentInfo = await analyzeMainComponentInfo(componentNode);
+  }
+
   return nodeInfo;
 }
 
@@ -981,9 +1092,19 @@ async function analyzeSectionContent(
     const frames: FrameInfo[] = [];
     let totalTextNodes = 0;
     let totalNodes = 0;
+    let totalInstanceNodes = 0;
+    let totalComponentNodes = 0;
+    let totalRemoteComponents = 0;
+    let totalLocalComponents = 0;
 
     // Find all direct children of the section (not just frames)
     console.log("Section children:", section.children.length);
+
+    // Debug: Log all children types in the section
+    section.children.forEach((child, i) => {
+      console.log(`   Child ${i + 1}: "${child.name}" (${child.type})`);
+    });
+
     const frameChildren = section.children.filter(
       (child) => child.type === "FRAME"
     ) as FrameNode[];
@@ -992,40 +1113,188 @@ async function analyzeSectionContent(
     for (const frame of frameChildren) {
       console.log("Processing frame:", frame.name);
 
-      // Find all visible nodes within this frame (not just text nodes)
+      // Find all nodes within this frame, excluding hidden layers
       const allNodes = frame.findAll() as SceneNode[];
-      const visibleNodes = allNodes.filter((node) => node.visible !== false);
+      const visibleNodes = allNodes.filter((node) => {
+        // Exclude hidden layers (eye icon toggled off in layer panel)
+        if ("visible" in node && node.visible === false) return false;
 
-      // Count text nodes (only visible ones)
+        // Exclude locked layers if requested (they might still be visible but locked)
+        // Uncomment the line below if you want to exclude locked layers too:
+        // if ('locked' in node && node.locked === true) return false;
+
+        // Check if any parent containers are hidden
+        let current = node.parent;
+        while (current && current.type !== "PAGE") {
+          if ("visible" in current && current.visible === false) return false;
+          current = current.parent;
+        }
+
+        return true;
+      });
+
+      // Count text nodes, instance nodes, and component nodes (only visible ones)
       const textNodes = visibleNodes.filter((node) => node.type === "TEXT");
-      console.log(`Processing frame "${frame.name}": ${visibleNodes.length} nodes, ${textNodes.length} text nodes`);
+      const instanceNodes = visibleNodes.filter(
+        (node) => node.type === "INSTANCE"
+      );
+      const componentNodes = visibleNodes.filter(
+        (node) => node.type === "COMPONENT"
+      );
+
+      console.log(
+        `Processing frame "${frame.name}": ${visibleNodes.length} nodes, ${textNodes.length} text nodes, ${instanceNodes.length} instance nodes, ${componentNodes.length} component nodes`
+      );
+
+      // Debug: Log all component and instance names
+      if (instanceNodes.length > 0 || componentNodes.length > 0) {
+        console.log(`🔍 Found components in frame "${frame.name}":`);
+        instanceNodes.forEach((node, i) => {
+          console.log(`   Instance ${i + 1}: "${node.name}"`);
+        });
+        componentNodes.forEach((node, i) => {
+          console.log(`   Component ${i + 1}: "${node.name}"`);
+        });
+      }
+
+      // Analyze all nodes to get component information
+      const analyzedNodes = await Promise.all(visibleNodes.map(analyzeNode));
+
+      // Count remote vs local components
+      let remoteComponentsCount = 0;
+      let localComponentsCount = 0;
+
+      for (const node of analyzedNodes) {
+        if (node.componentInfo) {
+          if (node.componentInfo.isRemote) {
+            remoteComponentsCount++;
+          } else {
+            localComponentsCount++;
+          }
+        }
+      }
+
+      console.log(
+        `Frame "${frame.name}" component analysis: ${remoteComponentsCount} remote, ${localComponentsCount} local`
+      );
 
       const frameInfo: FrameInfo = {
         id: frame.id,
         name: frame.name,
         totalNodes: visibleNodes.length,
         textNodesCount: textNodes.length,
-        nodes: await Promise.all(visibleNodes.map(analyzeNode)),
+        instanceNodesCount: instanceNodes.length,
+        componentNodesCount: componentNodes.length,
+        remoteComponentsCount,
+        localComponentsCount,
+        nodes: analyzedNodes,
       };
 
       frames.push(frameInfo);
       totalTextNodes += textNodes.length;
       totalNodes += visibleNodes.length;
+      totalInstanceNodes += instanceNodes.length;
+      totalComponentNodes += componentNodes.length;
+      totalRemoteComponents += remoteComponentsCount;
+      totalLocalComponents += localComponentsCount;
     }
 
-    const result = {
+    const result: SectionAnalysis = {
       sectionId: section.id,
       sectionName: section.name,
       totalFrames: frameChildren.length,
       totalTextNodes,
       totalNodes,
+      totalInstanceNodes,
+      totalComponentNodes,
+      totalRemoteComponents,
+      totalLocalComponents,
       frames,
     };
 
     console.log("Analysis result:", result);
+    console.log(`📊 COMPONENT SUMMARY:`);
+    console.log(`   Total instances: ${totalInstanceNodes}`);
+    console.log(`   Total component definitions: ${totalComponentNodes}`);
+    console.log(`   Remote components: ${totalRemoteComponents}`);
+    console.log(`   Local components: ${totalLocalComponents}`);
+
     return result;
   } catch (error) {
     console.error("Error analyzing section:", error);
     return null;
+  }
+}
+
+// Debug function to help troubleshoot component detection
+async function debugComponentDetection() {
+  console.log("🔍 DEBUGGING COMPONENT DETECTION");
+
+  try {
+    // Get current page
+    const currentPage = figma.currentPage;
+    console.log(`📄 Current page: "${currentPage.name}"`);
+
+    // Find all nodes on the current page
+    const allNodes = currentPage.findAll() as SceneNode[];
+    console.log(`🔍 Found ${allNodes.length} total nodes on page`);
+
+    // Filter for component-related nodes
+    const instanceNodes = allNodes.filter((node) => node.type === "INSTANCE");
+    const componentNodes = allNodes.filter((node) => node.type === "COMPONENT");
+
+    console.log(`🔗 Found ${instanceNodes.length} instance nodes:`);
+    for (let i = 0; i < instanceNodes.length; i++) {
+      const node = instanceNodes[i];
+      console.log(`   ${i + 1}. "${node.name}" (ID: ${node.id})`);
+      if (node.type === "INSTANCE") {
+        const instance = node as InstanceNode;
+        try {
+          const mainComponent = await instance.getMainComponentAsync();
+          if (mainComponent) {
+            console.log(
+              `      → Main component: "${mainComponent.name}" (Remote: ${mainComponent.remote})`
+            );
+          } else {
+            console.log(`      → No main component found!`);
+          }
+        } catch (error) {
+          console.log(`      → Error getting main component:`, error);
+        }
+      }
+    }
+
+    console.log(
+      `🧩 Found ${componentNodes.length} component definition nodes:`
+    );
+    componentNodes.forEach((node, i) => {
+      console.log(`   ${i + 1}. "${node.name}" (ID: ${node.id})`);
+      if (node.type === "COMPONENT") {
+        const component = node as ComponentNode;
+        console.log(`      → Remote: ${component.remote}`);
+      }
+    });
+
+    // Check if there are any sections
+    const sections = currentPage.children.filter(
+      (child) => child.type === "SECTION"
+    );
+    console.log(`📁 Found ${sections.length} sections:`);
+    sections.forEach((section, i) => {
+      console.log(`   ${i + 1}. "${section.name}" (ID: ${section.id})`);
+    });
+
+    figma.ui.postMessage({
+      type: "debug-result",
+      message: `Found ${instanceNodes.length} instances and ${componentNodes.length} component definitions`,
+    });
+  } catch (error) {
+    console.error("💥 Error in debug function:", error);
+    figma.ui.postMessage({
+      type: "debug-result",
+      message: `Error: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    });
   }
 }

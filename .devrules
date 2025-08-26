@@ -276,4 +276,52 @@ src/
 
 ---
 
+## 📋 Rule #11: Commit and Push Control
+
+**Status: ACTIVE** | **Priority: CRITICAL**
+
+### Development Workflow Control:
+
+- [ ] **Do not commit or push until explicitly asked**
+- [ ] Wait for user confirmation before any git operations
+- [ ] Allow user full control over when changes are committed
+- [ ] Maintain conversation-based rule confirmation
+
+### Rationale:
+
+- Gives user complete control over repository state
+- Prevents accidental commits of work-in-progress
+- Allows for review and testing before finalizing changes
+- Maintains clear communication about repository updates
+
+---
+
+## 🔨 Rule #12: Build After Code Updates
+
+**Status: ACTIVE** | **Priority: HIGH**
+
+### Automatic Build Process:
+
+- [ ] **Run `npm run build` after every code change**
+- [ ] Ensure dist/ folder is updated with latest TypeScript compilation
+- [ ] Verify build completes successfully before testing
+- [ ] Rebuild is required for Figma plugin to use latest changes
+
+### Build Commands:
+
+```bash
+npm run build           # Full build (main + UI)
+npm run build:main      # Compile TypeScript only
+npm run copy:ui         # Copy UI files only
+```
+
+### Rationale:
+
+- Figma plugins run from compiled dist/ files, not source
+- TypeScript changes need compilation to take effect
+- Prevents testing outdated code in Figma
+- Ensures consistent development workflow
+
+---
+
 _These rules are living guidelines and can be updated as the project evolves. Always use best judgment and document any rule exceptions._
