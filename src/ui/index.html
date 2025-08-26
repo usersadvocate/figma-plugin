@@ -138,9 +138,7 @@
       Analyze Section
     </button>
 
-    <button id="debug-button" class="scan-button" style="background: #FF9800; margin-top: 8px;">
-      🔍 Debug Components
-    </button>
+
     
 
     
@@ -237,17 +235,7 @@
       }
     };
 
-    // Handle debug button
-    document.getElementById('debug-button').onclick = () => {
-      parent.postMessage({
-        pluginMessage: {
-          type: 'debug-components'
-        }
-      }, '*');
 
-      document.getElementById('analysis-results').innerHTML =
-        '<div class="loading">🔍 Debugging component detection...</div>';
-    };
     
 
     
@@ -286,10 +274,7 @@
         showJumpFeedback(msg.nodeName, msg.nodeType);
       }
 
-      if (msg.type === 'debug-result') {
-        document.getElementById('analysis-results').innerHTML =
-          `<div class="no-issues">${msg.message}</div>`;
-      }
+
     };
     
     function displayAnalysis(analysis) {
