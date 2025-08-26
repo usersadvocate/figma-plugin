@@ -159,54 +159,7 @@
       }, '*');
     }
 
-    // Function to show feedback when jumping to a node
-    function showJumpFeedback(nodeName, nodeType) {
-      // Create a temporary notification
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        padding: 12px 16px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10000;
-        animation: slideIn 0.3s ease-out;
-      `;
-      notification.innerHTML = `🎯 Jumped to ${nodeType}: "${nodeName}"`;
 
-      // Add animation CSS
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-      `;
-      document.head.appendChild(style);
-
-      document.body.appendChild(notification);
-
-      // Remove after 3 seconds with fade out
-      setTimeout(() => {
-        notification.style.animation = 'fadeOut 0.5s ease-out';
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 500);
-      }, 3000);
-
-      console.log(`🎯 Jump feedback shown for: ${nodeName} (${nodeType})`);
-    }
 
     // Load sections when plugin starts
     parent.postMessage({ pluginMessage: { type: 'get-sections' } }, '*');
@@ -271,7 +224,8 @@
       }
 
       if (msg.type === 'node-jumped') {
-        showJumpFeedback(msg.nodeName, msg.nodeType);
+        // Node jump completed - no notification needed
+        console.log(`🎯 Jumped to ${msg.nodeType}: "${msg.nodeName}"`);
       }
 
 

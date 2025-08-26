@@ -4,6 +4,28 @@ import { NodeInfo, SectionAnalysis, FrameInfo } from "../types";
 import { extractVariableBindings, groupBindings } from "./variables";
 import { analyzeComponentInfo, analyzeMainComponentInfo } from "./components";
 
+// Helper function to check if a node is effectively visible (not hidden by itself or parents)
+function isNodeEffectivelyVisible(
+  node: SceneNode,
+  rootFrame?: FrameNode
+): boolean {
+  // Check if this node is directly hidden
+  if ("visible" in node && node.visible === false) {
+    return false;
+  }
+
+  // Check if any parent in the hierarchy is hidden (up to the root frame)
+  let parent = node.parent;
+  while (parent && parent !== rootFrame) {
+    if ("visible" in parent && parent.visible === false) {
+      return false;
+    }
+    parent = parent.parent;
+  }
+
+  return true;
+}
+
 // Helper function to analyze any scene node for variable bindings
 export async function analyzeNode(node: SceneNode): Promise<NodeInfo> {
   const variableBindings = await extractVariableBindings(node);
@@ -104,14 +126,39 @@ export async function analyzeSectionContent(
       // Find all nodes within this frame, excluding hidden layers
       const allNodes = frame.findAll() as SceneNode[];
       const visibleNodes = allNodes.filter((node) => {
-        // Exclude hidden layers (eye icon toggled off in layer panel)
-        if ("visible" in node && node.visible === false) return false;
+        const isVisible = isNodeEffectivelyVisible(node, frame);
+        if (!isVisible) {
+          console.log(
+            `🙈 Excluding hidden node: "${node.name}" (${node.type})`
+          );
+          return false;
+        }
 
-        // Exclude locked layers if requested (they might still be visible but locked)
-        // Uncomment the line below if you want to exclude locked layers too:
-        // if ("locked" in node && node.locked === true) return false;
+        // Check if this node is nested inside a COMPONENT that has variable bindings
+        let parent = node.parent;
+        while (parent && parent !== frame) {
+          if (parent.type === "COMPONENT" || parent.type === "INSTANCE") {
+            // Check if this component has variable bindings
+            const componentHasBindings =
+              "boundVariables" in parent &&
+              parent.boundVariables &&
+              Object.keys(parent.boundVariables).length > 0;
 
-        return true;
+            if (componentHasBindings) {
+              console.log(
+                `📦 Excluding nested element "${
+                  node.name
+                }" - parent ${parent.type.toLowerCase()} "${
+                  parent.name
+                }" has variable bindings`
+              );
+              return false;
+            }
+          }
+          parent = parent.parent;
+        }
+
+        return isVisible;
       });
 
       const textNodes = visibleNodes.filter((node) => node.type === "TEXT");

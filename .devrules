@@ -250,6 +250,7 @@ src/
 - [ ] **Rule #3**: Build successful and tested
 - [ ] **Rule #4**: Basic functionality tested
 - [ ] **Rule #5**: Commit message follows format
+- [ ] **Rule #13**: Solutions built forward, not reverted
 - [ ] No critical security issues
 - [ ] No broken functionality
 
@@ -321,6 +322,57 @@ npm run copy:ui         # Copy UI files only
 - TypeScript changes need compilation to take effect
 - Prevents testing outdated code in Figma
 - Ensures consistent development workflow
+
+---
+
+## ⚡ Rule #13: Forward-Thinking Problem Resolution
+
+**Status: ACTIVE** | **Priority: HIGH**
+
+### Solution Philosophy:
+
+- [ ] **Build forward to new solutions** rather than reverting to previous ones
+- [ ] When encountering problems, seek innovative approaches that improve the codebase
+- [ ] Avoid the temptation to simply undo changes when issues arise
+- [ ] Use problems as opportunities to create better, more robust solutions
+
+### Forward-Building Approach:
+
+1. **Analyze the root cause** of the problem thoroughly
+2. **Consider multiple solution paths** before choosing one
+3. **Design solutions that address both the immediate issue and potential future problems**
+4. **Refactor and improve** existing code as part of the solution
+5. **Document the reasoning** behind the chosen approach
+
+### Problem-Solving Strategy:
+
+- [ ] Identify what the problem is teaching us about the codebase
+- [ ] Look for systemic improvements that can prevent similar issues
+- [ ] Consider how the solution will impact future development
+- [ ] Ensure the new solution is more maintainable than the original
+- [ ] Test thoroughly to validate the forward-thinking approach
+
+### When NOT to Revert:
+
+- [ ] When the problem reveals architectural weaknesses
+- [ ] When a new approach would improve code quality
+- [ ] When the issue points to missing abstractions or patterns
+- [ ] When reverting would leave technical debt unaddressed
+
+### Acceptable Reversion Cases:
+
+- [ ] Critical production bugs that need immediate rollback
+- [ ] Security vulnerabilities requiring immediate mitigation
+- [ ] Breaking changes that affect dependent systems
+- [ ] Deadlines that prevent proper forward-building solutions
+
+### Rationale:
+
+- Encourages continuous improvement and innovation
+- Builds a more robust and maintainable codebase over time
+- Develops problem-solving skills and architectural thinking
+- Prevents accumulation of technical debt through quick fixes
+- Creates learning opportunities from every challenge
 
 ---
 
