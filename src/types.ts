@@ -34,6 +34,70 @@ export interface FrameInfo {
   nodes: NodeInfo[];
 }
 
+export interface AuditResult {
+  containerId: string;
+  containerName: string;
+  summary: AuditSummary;
+  withVariables: AuditableNode[];
+  withoutVariables: AuditableNode[];
+  lintFindings: LintFinding[];
+  coveragePercentage: number;
+}
+
+export interface AuditSummary {
+  totalAuditableNodes: number;
+  withVariablesCount: number;
+  withLocalVariablesCount: number;
+  withGlobalVariablesCount: number;
+  withoutVariablesCount: number;
+}
+
+export interface AuditableNode {
+  id: string;
+  name: string;
+  type: AuditableNodeType;
+  framePath: string;
+  classification: NodeClassification;
+  variableBindings: VariableBinding[];
+  lintFindings: LintFinding[];
+  hasLocalVariables: boolean;
+  hasGlobalVariables: boolean;
+}
+
+export type AuditableNodeType =
+  | "TEXT"
+  | "FRAME"
+  | "RECTANGLE"
+  | "COMPONENT"
+  | "INSTANCE"
+  | "ELLIPSE"
+  | "POLYGON"
+  | "STAR"
+  | "VECTOR"
+  | "LINE";
+
+export type NodeClassification =
+  | "USES_VARIABLES_LOCAL"
+  | "USES_VARIABLES_GLOBAL"
+  | "USES_VARIABLES_MIXED"
+  | "NO_VARIABLES";
+
+export interface LintFinding {
+  nodeId: string;
+  rule: LintRule;
+  severity: "error" | "warning" | "info";
+  message: string;
+  property?: string;
+  details?: any;
+}
+
+export type LintRule =
+  | "NoVariables"
+  | "MixedText"
+  | "ConflictingStyleVsVariable"
+  | "MagicNumbers"
+  | "UnresolvableVariable";
+
 export interface SectionAnalysis {
   sectionId: string;
   sectionName: string;
@@ -55,6 +119,7 @@ export interface VariableBinding {
   property: string;
   bindingType: "normal" | "array";
   arrayIndex?: number;
+  variableId: string;
   variableName: string;
   collectionName: string;
   aliasName?: string;
@@ -114,6 +179,11 @@ export interface AnalyzeSectionMessage {
   sectionId: string;
 }
 
+export interface AuditContainerMessage {
+  type: "audit-container";
+  containerId: string;
+}
+
 export interface JumpToNodeMessage {
   type: "jump-to-node";
   nodeId: string;
@@ -123,9 +193,16 @@ export interface CancelMessage {
   type: "cancel";
 }
 
+export interface GetContainerInfoMessage {
+  type: "get-container-info";
+  containerId: string;
+}
+
 export type UIMessage =
   | GetSectionsMessage
   | AnalyzeSectionMessage
+  | AuditContainerMessage
+  | GetContainerInfoMessage
   | JumpToNodeMessage
   | CancelMessage;
 
@@ -140,6 +217,11 @@ export interface SectionAnalysisResponse {
   analysis: SectionAnalysis | null;
 }
 
+export interface AuditResultResponse {
+  type: "audit-result";
+  audit: AuditResult | null;
+}
+
 export interface SelectionSectionResponse {
   type: "selection-section";
   sectionId: string | null;
@@ -151,8 +233,17 @@ export interface NodeJumpedResponse {
   nodeType: string;
 }
 
+export interface ContainerInfoResponse {
+  type: "container-info";
+  id: string;
+  name: string;
+  containerType: "SECTION" | "FRAME";
+}
+
 export type UIResponse =
   | SectionsLoadedResponse
   | SectionAnalysisResponse
+  | AuditResultResponse
   | SelectionSectionResponse
-  | NodeJumpedResponse;
+  | NodeJumpedResponse
+  | ContainerInfoResponse;

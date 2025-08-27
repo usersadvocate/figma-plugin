@@ -1,7 +1,8 @@
 // Event handling and message communication
 
-import { getSections, getSelectedSectionId } from "./sections";
-import { analyzeSectionContent } from "../analysis/nodes";
+import { getSelectedContainerId } from "./sections";
+import { analyzeContainerContent } from "../analysis/nodes";
+import { auditContainer } from "../analysis/audit";
 import { UIMessage } from "../types";
 
 // Helper function to jump to a specific node in Figma
@@ -45,18 +46,37 @@ export async function jumpToNode(nodeId: string) {
 // Main message handler
 export async function handleUIMessage(msg: UIMessage) {
   if (msg.type === "get-sections") {
-    const sections = getSections();
-    const selectedSectionId = getSelectedSectionId();
-    figma.ui.postMessage({
-      type: "sections-loaded",
-      sections,
-      selectedSectionId,
-    });
+    // No longer needed - we use direct selection instead of dropdown
+    console.log("get-sections called but no longer needed");
   }
 
   if (msg.type === "analyze-section") {
-    const analysis = await analyzeSectionContent(msg.sectionId);
+    const analysis = await analyzeContainerContent(msg.sectionId);
     figma.ui.postMessage({ type: "section-analysis", analysis });
+  }
+
+  if (msg.type === "audit-container") {
+    const audit = await auditContainer(msg.containerId);
+    figma.ui.postMessage({ type: "audit-result", audit });
+  }
+
+  if (msg.type === "get-container-info") {
+    try {
+      const container = await figma.getNodeByIdAsync(msg.containerId);
+      if (
+        container &&
+        (container.type === "SECTION" || container.type === "FRAME")
+      ) {
+        figma.ui.postMessage({
+          type: "container-info",
+          id: container.id,
+          name: container.name,
+          containerType: container.type,
+        });
+      }
+    } catch (error) {
+      console.error("Error getting container info:", error);
+    }
   }
 
   if (msg.type === "jump-to-node") {
@@ -70,52 +90,13 @@ export async function handleUIMessage(msg: UIMessage) {
 
 // Selection change handler
 export function handleSelectionChange() {
-  const sectionId = getSelectedSectionId();
-  figma.ui.postMessage({ type: "selection-section", sectionId });
+  const containerId = getSelectedContainerId();
+  figma.ui.postMessage({ type: "selection-section", sectionId: containerId });
 }
 
-// Debounced broadcaster for sections list
-let pendingSectionsRefresh = false;
-export function refreshSectionsDebounced() {
-  if (pendingSectionsRefresh) return;
-  pendingSectionsRefresh = true;
-  setTimeout(() => {
-    pendingSectionsRefresh = false;
-    const sections = getSections();
-    const selectedSectionId = getSelectedSectionId();
-    figma.ui.postMessage({
-      type: "sections-loaded",
-      sections,
-      selectedSectionId,
-    });
-  }, 100);
-}
-
-// Document change listener
-export async function attachDocumentChangeListener() {
-  try {
-    // Load all pages to enable documentchange events
-    await figma.loadAllPagesAsync();
-    figma.on("documentchange", () => {
-      console.log("📝 Document changed, refreshing sections list");
-      refreshSectionsDebounced();
-    });
-    console.log("📝 Document change listener attached");
-  } catch (error) {
-    console.warn("Could not attach document change listener:", error);
-    console.log("Falling back to polling only");
-  }
-}
-
-// Sections polling (fallback for document change detection)
-let sectionsPollingInterval: number | null = null;
-
-export function startSectionsPolling() {
-  if (sectionsPollingInterval) return; // Already polling
-
-  sectionsPollingInterval = setInterval(() => {
-    refreshSectionsDebounced();
-  }, 2000); // Poll every 2 seconds
-
-  console.log("🔄 Started sections polling");
-}
+// These heavy operations have been removed for performance:
+// - Document change listening (was calling figma.loadAllPagesAsync())
+// - Sections polling (was running every 2 seconds)
+// - Container scanning (was recursively searching all nodes)
+//
+// We now use lightweight direct selection instead!

@@ -81,21 +81,27 @@ export async function analyzeNode(node: SceneNode): Promise<NodeInfo> {
   return nodeInfo;
 }
 
-// Main section analysis function
-export async function analyzeSectionContent(
-  sectionId: string
+// Main container analysis function (works for both sections and frames)
+export async function analyzeContainerContent(
+  containerId: string
 ): Promise<SectionAnalysis | null> {
   try {
-    console.log("Analyzing section with ID:", sectionId);
-    const section = await figma.getNodeByIdAsync(sectionId);
+    console.log("Analyzing container with ID:", containerId);
+    const container = await figma.getNodeByIdAsync(containerId);
     console.log(
       "Found node:",
-      section && section.type,
-      section && section.name
+      container && container.type,
+      container && container.name
     );
 
-    if (!section || section.type !== "SECTION") {
-      console.error("Node is not a section:", section && section.type);
+    if (
+      !container ||
+      (container.type !== "SECTION" && container.type !== "FRAME")
+    ) {
+      console.error(
+        "Node is not a section or frame:",
+        container && container.type
+      );
       return null;
     }
 
@@ -107,18 +113,26 @@ export async function analyzeSectionContent(
     let totalRemoteComponents = 0;
     let totalLocalComponents = 0;
 
-    // Find all direct children of the section (not just frames)
-    console.log("Section children:", section.children.length);
+    let frameChildren: FrameNode[] = [];
 
-    // Debug: Log all children types in the section
-    section.children.forEach((child, i) => {
-      console.log(`   Child ${i + 1}: "${child.name}" (${child.type})`);
-    });
+    if (container.type === "SECTION") {
+      // For sections, analyze child frames
+      console.log("Section children:", container.children.length);
 
-    const frameChildren = section.children.filter(
-      (child) => child.type === "FRAME"
-    ) as FrameNode[];
-    console.log("Frame children found:", frameChildren.length);
+      // Debug: Log all children types in the section
+      container.children.forEach((child, i) => {
+        console.log(`   Child ${i + 1}: "${child.name}" (${child.type})`);
+      });
+
+      frameChildren = container.children.filter(
+        (child) => child.type === "FRAME"
+      ) as FrameNode[];
+      console.log("Frame children found:", frameChildren.length);
+    } else if (container.type === "FRAME") {
+      // For frames, analyze the frame itself
+      frameChildren = [container as FrameNode];
+      console.log("Analyzing single frame:", container.name);
+    }
 
     for (const frame of frameChildren) {
       console.log("Processing frame:", frame.name);
@@ -250,8 +264,8 @@ export async function analyzeSectionContent(
     }
 
     const analysis: SectionAnalysis = {
-      sectionId: section.id,
-      sectionName: section.name,
+      sectionId: container.id,
+      sectionName: container.name,
       totalFrames: frames.length,
       totalTextNodes,
       totalNodes,
@@ -274,7 +288,14 @@ export async function analyzeSectionContent(
 
     return analysis;
   } catch (error) {
-    console.error("Error analyzing section:", error);
+    console.error("Error analyzing container:", error);
     return null;
   }
+}
+
+// Legacy function for backward compatibility
+export async function analyzeSectionContent(
+  sectionId: string
+): Promise<SectionAnalysis | null> {
+  return analyzeContainerContent(sectionId);
 }

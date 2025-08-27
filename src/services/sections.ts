@@ -1,35 +1,41 @@
-export interface SectionInfo {
+export interface ContainerInfo {
   id: string;
   name: string;
+  type: "SECTION" | "FRAME";
 }
 
-export function getSections(): SectionInfo[] {
-  const sections: SectionInfo[] = [];
-  figma.currentPage.children.forEach((node) => {
-    if (node.type === 'SECTION') {
-      sections.push({ id: node.id, name: node.name });
-    }
-  });
-  return sections;
-}
+// Heavy container scanning functions removed for performance.
+// We now use lightweight direct selection instead of scanning all nodes.
 
 export function findAncestorSection(node: BaseNode | null): SectionNode | null {
   let current: BaseNode | null = node;
   while (current) {
-    if (current.type === 'SECTION') return current as SectionNode;
+    if (current.type === "SECTION") return current as SectionNode;
     current = current.parent;
   }
   return null;
 }
 
-export function getSelectedSectionId(): string | null {
+export function getSelectedContainerId(): string | null {
   const selection = figma.currentPage.selection;
   if (!selection || selection.length === 0) return null;
+
   for (const node of selection) {
-    if (node.type === 'SECTION') return node.id;
+    if (node.type === "SECTION" || node.type === "FRAME") return node.id;
   }
-  const ancestor = findAncestorSection(selection[0]);
-  return ancestor ? ancestor.id : null;
+
+  // Look for ancestor section or frame
+  let current: BaseNode | null = selection[0];
+  while (current) {
+    if (current.type === "SECTION" || current.type === "FRAME")
+      return current.id;
+    current = current.parent;
+  }
+
+  return null;
 }
 
-
+// Keep legacy function for backward compatibility
+export function getSelectedSectionId(): string | null {
+  return getSelectedContainerId();
+}

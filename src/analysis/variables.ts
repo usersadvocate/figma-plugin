@@ -37,12 +37,25 @@ export async function getVariableInfo(
   variableId: string
 ): Promise<{ name: string; collectionName: string } | null> {
   try {
-    const variable = await figma.variables.getVariableByIdAsync(variableId);
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise<null>((_, reject) => {
+      setTimeout(() => reject(new Error("Timeout")), 3000);
+    });
+
+    const variable = await Promise.race([
+      figma.variables.getVariableByIdAsync(variableId),
+      timeoutPromise,
+    ]);
+
     if (!variable) return null;
 
-    const collection = await figma.variables.getVariableCollectionByIdAsync(
-      variable.variableCollectionId
-    );
+    const collection = await Promise.race([
+      figma.variables.getVariableCollectionByIdAsync(
+        variable.variableCollectionId
+      ),
+      timeoutPromise,
+    ]);
+
     const collectionName = collection ? collection.name : "Unknown Collection";
 
     return {
@@ -50,7 +63,7 @@ export async function getVariableInfo(
       collectionName,
     };
   } catch (error) {
-    console.error("Error resolving variable:", variableId, error);
+    console.warn("Variable lookup failed:", variableId.slice(-8));
     return null;
   }
 }
@@ -83,31 +96,31 @@ export async function extractVariableBindings(
             const bind = binding[i];
             if (bind && bind.id) {
               const varInfo = await getVariableInfo(bind.id);
-              if (varInfo) {
-                bindings.push({
-                  property: prop,
-                  variableName: varInfo.name,
-                  collectionName: varInfo.collectionName,
-                  bindingType: "array",
-                  arrayIndex: i,
-                  variableType: "design",
-                  isAlias: false,
-                });
-              }
+              bindings.push({
+                property: prop,
+                variableId: bind.id,
+                variableName:
+                  varInfo?.name || `[Variable ID: ${bind.id.slice(-8)}]`,
+                collectionName: varInfo?.collectionName || "Unknown Collection",
+                bindingType: "array",
+                arrayIndex: i,
+                variableType: "design",
+                isAlias: false,
+              });
             }
           }
         } else if (binding && binding.id) {
           const varInfo = await getVariableInfo(binding.id);
-          if (varInfo) {
-            bindings.push({
-              property: prop,
-              variableName: varInfo.name,
-              collectionName: varInfo.collectionName,
-              bindingType: "normal",
-              variableType: "design",
-              isAlias: false,
-            });
-          }
+          bindings.push({
+            property: prop,
+            variableId: binding.id,
+            variableName:
+              varInfo?.name || `[Variable ID: ${binding.id.slice(-8)}]`,
+            collectionName: varInfo?.collectionName || "Unknown Collection",
+            bindingType: "normal",
+            variableType: "design",
+            isAlias: false,
+          });
         }
       } catch (error) {
         console.error(

@@ -15,10 +15,9 @@
     }
     
     .container {
-      background: #ffffff;
-      border: 1px solid #e0e0e0;
+      background: #f8f8f8;
+      border: 1px solid #ccc;
       padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     h2 {
@@ -95,15 +94,17 @@
     }
     
     .issue-item {
-      border-bottom: 1px solid #e8e8e8;
+      border: 1px solid #ccc;
       padding: 16px;
-      background: #ffffff;
+      background: #f8f8f8;
       font-size: 11px;
       line-height: 1.6;
+      margin-bottom: 16px;
+      font-family: 'JetBrains Mono', monospace;
     }
     
     .issue-item:last-child {
-      border-bottom: none;
+      border-bottom: 1px solid #ccc;
     }
     
     .issue-header {
@@ -111,14 +112,17 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ccc;
     }
     
     .issue-title {
       font-weight: 500;
-      color: #1a1a1a;
+      color: #2a2a2a;
       font-size: 11px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
       margin: 0;
+      text-transform: uppercase;
     }
     
     .fix-button {
@@ -209,28 +213,264 @@
       letter-spacing: 0.3px;
       color: #666;
     }
+
+    .instructions {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .instructions p {
+      margin: 0 0 12px 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #495057;
+    }
+
+    .current-selection {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 3px;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #6c757d;
+      min-height: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .current-selection.has-selection {
+      color: #28a745;
+      border-color: #28a745;
+      background: #f8fff9;
+    }
+
+    .component-analysis-card {
+      background: #f8f8f8;
+      border: 1px solid #ccc;
+      padding: 16px;
+      margin: 16px 0;
+      color: #2a2a2a;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .component-analysis-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      gap: 8px;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 8px;
+    }
+
+    .component-icon {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .component-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #2a2a2a;
+    }
+
+    .component-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 16px;
+      text-align: center;
+    }
+
+    .component-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      padding: 12px 8px;
+    }
+
+    .stat-icon {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .stat-number {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      color: #2a2a2a;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Audit UI Styles */
+    .audit-card {
+      background: #f8f8f8;
+      border: 1px solid #ccc;
+      padding: 16px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s ease;
+    }
+
+    .audit-card.clickable {
+      cursor: pointer;
+    }
+
+    .audit-card.clickable:hover {
+      background: #e8e8e8;
+      border-color: #999;
+    }
+
+    .audit-card-header {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .audit-card-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2a2a2a;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .audit-card-label {
+      font-size: 9px;
+      color: #666;
+      line-height: 1.3;
+    }
+
+    .audit-table {
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+
+    .audit-table-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 2fr 1fr 2fr 80px;
+      gap: 12px;
+      padding: 12px;
+      background: #f0f0f0;
+      border-bottom: 1px solid #ccc;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .audit-table-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 2fr 1fr 2fr 80px;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 11px;
+      align-items: center;
+    }
+
+    .audit-table-row:hover {
+      background: #f8f8f8;
+    }
+
+    .audit-table-cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .classification-badge, .status-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .classification-badge.local {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #4caf50;
+    }
+
+    .classification-badge.global {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #2196f3;
+    }
+
+    .classification-badge.mixed {
+      background: #fff3e0;
+      color: #f57c00;
+      border: 1px solid #ff9800;
+    }
+
+    .status-badge.has-vars {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #4caf50;
+    }
+
+    .status-badge.no-vars {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #f44336;
+    }
+
+    .jump-btn {
+      padding: 4px 8px;
+      background: #2a2a2a;
+      color: white;
+      border: 1px solid #2a2a2a;
+      font-size: 9px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .jump-btn:hover {
+      background: #1a1a1a;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Sections</h2>
+    <h2>Variable Bindings Linter</h2>
     
-    <div class="section-selector">
-      <label for="section-select">Select Section:</label>
-      <select id="section-select">
-        <option value="">Loading sections...</option>
-      </select>
+    <div class="instructions">
+      <p>📍 <strong>Click on any section or frame</strong> in Figma to analyze its variable bindings.</p>
+      <div id="current-selection" class="current-selection">
+        No section or frame selected
+      </div>
     </div>
-    
-    <button id="analyze-button" class="scan-button" disabled>
-      Analyze Section
+
+    <button id="analyze-cta" class="scan-button" disabled>
+      Audit Variables
     </button>
 
-
-    
-
-    
-    <div id="analysis-results" class="loading">Select a section and click analyze to see frames and text nodes</div>
+    <div id="audit-results"></div>
   </div>
 
       <script>
@@ -249,65 +489,93 @@
 
 
 
-    // Load sections when plugin starts
-    parent.postMessage({ pluginMessage: { type: 'get-sections' } }, '*');
-    
-    const sectionSelect = document.getElementById('section-select');
-    const analyzeButton = document.getElementById('analyze-button');
+    // State management
+    let currentSelectionId = null;
+    let currentSelectionName = null;
+    let currentSelectionType = null;
 
-    // Handle section selection
-    sectionSelect.onchange = (e) => {
-      analyzeButton.disabled = !e.target.value;
-    };
-    
-    // Handle analyze button
+    const currentSelectionDiv = document.getElementById('current-selection');
+    const analyzeButton = document.getElementById('analyze-cta');
+
+    // Handle analyze button click
     analyzeButton.onclick = () => {
-      const sectionId = sectionSelect.value;
-      if (sectionId) {
+      analyzeCurrentSelection();
+    };
+
+
+    
+
+    
+    // Function to update current selection display
+    function updateSelectionDisplay(containerId, containerName, containerType) {
+      currentSelectionId = containerId;
+      currentSelectionName = containerName;
+      currentSelectionType = containerType;
+      
+      if (containerId) {
+        const icon = containerType === 'SECTION' ? '📁' : '🔲';
+        currentSelectionDiv.textContent = `${icon} ${containerName}`;
+        currentSelectionDiv.classList.add('has-selection');
+        analyzeButton.disabled = false;
+        
+        // Clear previous results
+        document.getElementById('analysis-results').innerHTML = '';
+      } else {
+        currentSelectionDiv.textContent = 'No section or frame selected';
+        currentSelectionDiv.classList.remove('has-selection');
+        analyzeButton.disabled = true;
+        document.getElementById('analysis-results').innerHTML = '';
+      }
+    }
+
+    // Function to analyze current selection
+    function analyzeCurrentSelection() {
+      if (currentSelectionId) {
+        analyzeButton.disabled = true;
+        analyzeButton.textContent = 'Auditing...';
+        
         parent.postMessage({
           pluginMessage: {
-            type: 'analyze-section',
-            sectionId: sectionId
+            type: 'audit-container',
+            containerId: currentSelectionId
           }
         }, '*');
 
-        document.getElementById('analysis-results').innerHTML =
-          '<div class="loading">Analyzing section...</div>';
+        document.getElementById('audit-results').innerHTML =
+          '<div class="loading">Auditing variable usage...</div>';
       }
-    };
+    }
 
-
-    
-
-    
     // Handle messages from plugin
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
       
-      if (msg.type === 'sections-loaded') {
-        sectionSelect.innerHTML = '<option value="">Choose a section...</option>';
-        
-        msg.sections.forEach(section => {
-          const option = document.createElement('option');
-          option.value = section.id;
-          option.textContent = section.name;
-          sectionSelect.appendChild(option);
-        });
-        
-        if (msg.selectedSectionId) {
-          sectionSelect.value = msg.selectedSectionId;
-          analyzeButton.disabled = false;
+      if (msg.type === 'selection-section') {
+        // When user selects something in Figma, we get the ID
+        // We need to get the container info to display it properly
+        if (msg.sectionId) {
+          // Request container info for this ID
+          parent.postMessage({
+            pluginMessage: {
+              type: 'get-container-info',
+              containerId: msg.sectionId
+            }
+          }, '*');
+        } else {
+          updateSelectionDisplay(null, null, null);
         }
       }
       
-      if (msg.type === 'selection-section') {
-        if (msg.sectionId) {
-          sectionSelect.value = msg.sectionId;
-          analyzeButton.disabled = false;
-        }
+      if (msg.type === 'container-info') {
+        // Update selection display with container info
+        updateSelectionDisplay(msg.id, msg.name, msg.containerType);
       }
       
       if (msg.type === 'section-analysis') {
+        // Reset button state
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Analyze';
+        
         displayAnalysis(msg.analysis);
       }
 
@@ -316,6 +584,13 @@
         console.log(`🎯 Jumped to ${msg.nodeType}: "${msg.nodeName}"`);
       }
 
+      if (msg.type === 'audit-result') {
+        // Reset button state
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Audit Variables';
+        
+        displayAuditResult(msg.audit);
+      }
 
     };
     
@@ -323,7 +598,10 @@
       const container = document.getElementById('analysis-results');
 
       if (!analysis) {
-        container.innerHTML = '<div class="loading">❌ Failed to analyze section</div>';
+        container.innerHTML = '<div class="loading">❌ Failed to analyze container</div>';
+        // Reset button state on error
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Analyze';
         return;
       }
 
@@ -337,29 +615,52 @@
         }
       }
 
-      let html = `
-        <div class="no-issues">
-          <strong>${analysis.sectionName}</strong>
-        </div>
-      `;
+      let html = ``;
 
       // Add component summary if there are any components
       if (analysis.totalInstanceNodes > 0 || analysis.totalComponentNodes > 0) {
-        const componentSummary = [];
-        if (analysis.totalInstanceNodes > 0) {
-          componentSummary.push(`🔗 ${analysis.totalInstanceNodes} instances`);
-        }
-        if (analysis.totalComponentNodes > 0) {
-          componentSummary.push(`🧩 ${analysis.totalComponentNodes} definitions`);
-        }
-        if (analysis.totalRemoteComponents > 0 || analysis.totalLocalComponents > 0) {
-          componentSummary.push(`🌐 ${analysis.totalRemoteComponents} remote • 🏠 ${analysis.totalLocalComponents} local`);
-        }
-
         html += `
-        <div style="background: linear-gradient(135deg, #2196F3, #21CBF3); color: white; padding: 12px 16px; border-radius: 8px; margin: 12px 0; font-size: 14px; font-weight: bold; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid #fff;">
-          🧩 COMPONENT ANALYSIS 🧩 <br>
-          ${componentSummary.join(' • ')}
+        <div class="component-analysis-card">
+          <div class="component-analysis-header">
+            <span class="component-icon">🧩</span>
+            <span class="component-title">COMPONENT ANALYSIS</span>
+            <span class="component-icon">🧩</span>
+          </div>
+          <div class="component-stats">
+        `;
+        
+        if (analysis.totalInstanceNodes > 0) {
+          html += `
+            <div class="component-stat">
+              <span class="stat-icon">🔗</span>
+              <span class="stat-number">${analysis.totalInstanceNodes}</span>
+              <span class="stat-label">variables</span>
+            </div>
+          `;
+        }
+        
+        if (analysis.totalRemoteComponents > 0) {
+          html += `
+            <div class="component-stat">
+              <span class="stat-icon">🌐</span>
+              <span class="stat-number">${analysis.totalRemoteComponents}</span>
+              <span class="stat-label">remote</span>
+            </div>
+          `;
+        }
+        
+        if (analysis.totalLocalComponents > 0) {
+          html += `
+            <div class="component-stat">
+              <span class="stat-icon">🏠</span>
+              <span class="stat-number">${analysis.totalLocalComponents}</span>
+              <span class="stat-label">local</span>
+            </div>
+          `;
+        }
+        
+        html += `
+          </div>
         </div>
         `;
       }
@@ -424,9 +725,9 @@
             <div class="issue-item">
               <div class="issue-header">
                 <div class="issue-title">🖼️ ${frame.name}</div>
-                <div style="font-size: 12px;">${frame.totalNodes} nodes (${frame.textNodesCount} text) • ${nodesWithVariables} with variables${frameComponentSummary}</div>
+                <div style="font-size: 12px;">${frame.totalNodes} nodes (${frame.textNodesCount} text)${frameComponentSummary}</div>
               </div>
-              ${categorySummary ? `<div style="font-size: 11px; color: #666; margin-bottom: 8px;">📊 Variables by category: ${categorySummary}</div>` : ''}
+
           `;
 
           if (frame.nodes.length > 0) {
@@ -451,8 +752,8 @@
               html += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span style="font-weight: 600;">${nodeEmoji} ${nodeTitle}</span>
                 <div style="display: flex; align-items: center; gap: 4px;">
-                  <span style="font-size: 10px; color: #666;">${node.type} ${variableCount > 0 ? `• ${variableCount} vars` : ''}</span>
-                  <button style="padding: 2px 6px; background: #007acc; color: white; border: none; border-radius: 3px; font-size: 9px; cursor: pointer;" onclick="event.stopPropagation(); jumpToNode('${node.id}')">🔍</button>
+                  <span style="font-size: 10px; color: #666;">${node.type === 'INSTANCE' ? 'VARIABLE' : node.type}</span>
+                  <button style="padding: 3px 8px; background: #2a2a2a; color: white; border: 1px solid #2a2a2a; border-radius: 0; font-size: 9px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 500;" onclick="event.stopPropagation(); jumpToNode('${node.id}')">🔍</button>
                 </div>
               </div>`;
 
@@ -461,10 +762,10 @@
                 const componentInfo = node.componentInfo;
                 const componentTypeIcon = componentInfo.isRemote ? '🌐' : '🏠';
                 const componentTypeText = componentInfo.isRemote ? 'REMOTE' : 'LOCAL';
-                const nodeTypeText = node.type === 'COMPONENT' ? 'COMPONENT DEFINITION' : 'COMPONENT INSTANCE';
+                const nodeTypeText = node.type === 'COMPONENT' ? 'COMPONENT DEFINITION' : 'VARIABLE';
 
-                html += `<div style="background: linear-gradient(90deg, ${componentInfo.isRemote ? '#2196F3' : '#FF9800'}, ${componentInfo.isRemote ? '#21CBF3' : '#FFC107'}); color: white; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; font-size: 9px; font-weight: bold; text-align: center;">
-                  ${componentTypeIcon} ${componentTypeText} ${nodeTypeText}: ${componentInfo.mainComponentName}
+                html += `<div style="background: #f0f0f0; color: #2a2a2a; padding: 6px 10px; border: 1px solid #2a2a2a; margin-bottom: 8px; font-size: 10px; font-weight: 500; text-align: center; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px;">
+                  ${componentTypeIcon} ${componentInfo.libraryName}
                 </div>`;
 
                 // Add remote library info if available
@@ -542,7 +843,11 @@
                             : binding.property;
 
                           html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 4px; font-size: 9px;">
-                            <strong>${propertyName.replace(/^(dropShadow\.|innerShadow\.|layerBlur\.|backgroundBlur\.)/, '')}:</strong> ${binding.variableName} (${binding.collectionName})
+                            <strong>${propertyName.replace(/^(dropShadow\.|innerShadow\.|layerBlur\.|backgroundBlur\.)/, '')}:</strong><br>
+                            &nbsp;&nbsp;Variable: ${binding.variableName}<br>
+                            &nbsp;&nbsp;Collection: ${binding.collectionName}<br>
+                            &nbsp;&nbsp;Property: ${binding.property}<br>
+                            &nbsp;&nbsp;Type: ${binding.bindingType}${binding.arrayIndex !== undefined ? ` [${binding.arrayIndex}]` : ''}
                           </div>`;
                         });
                         html += '</div>';
@@ -554,8 +859,11 @@
                           ? `${binding.property}[${binding.arrayIndex}]`
                           : binding.property;
 
-                        html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 8px;">
-                          <strong>${propertyName}:</strong> ${binding.variableName} (${binding.collectionName})
+                        html += `<div style="color: #2e7d32; margin: 1px 0; padding-left: 8px; font-size: 10px;">
+                          <strong>${propertyName}:</strong><br>
+                          &nbsp;&nbsp;Variable: ${binding.variableName}<br>
+                          &nbsp;&nbsp;Collection: ${binding.collectionName}<br>
+                          &nbsp;&nbsp;Type: ${binding.bindingType}${binding.arrayIndex !== undefined ? ` [${binding.arrayIndex}]` : ''}
                         </div>`;
                       }
                     }
@@ -580,6 +888,212 @@
       }
 
       container.innerHTML = html;
+    }
+
+    // Display audit result with progressive disclosure UI
+    function displayAuditResult(audit) {
+      const container = document.getElementById('audit-results');
+
+      console.log('📊 Audit result received:', audit);
+
+      if (!audit) {
+        container.innerHTML = '<div class="loading">❌ Failed to audit container</div>';
+        // Reset button state on error
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Audit Variables';
+        return;
+      }
+
+      let html = '';
+      
+      // Coverage threshold warning
+      if (audit.coveragePercentage < 80) {
+        html += `
+          <div style="background: #ff6b6b; color: white; padding: 12px; margin-bottom: 16px; border: 1px solid #ccc; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
+            ⚠️ COVERAGE WARNING: Only ${audit.coveragePercentage.toFixed(1)}% of nodes use variables (threshold: 80%)
+          </div>
+        `;
+      }
+
+      // Summary cards
+      html += `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+          
+          <!-- Total Auditable Nodes -->
+          <div class="audit-card" onclick="showAllNodes()">
+            <div class="audit-card-header">TOTAL AUDITABLE</div>
+            <div class="audit-card-number">${audit.summary.totalAuditableNodes}</div>
+            <div class="audit-card-label">nodes</div>
+          </div>
+
+          <!-- With Variables -->
+          <div class="audit-card clickable" onclick="showWithVariables()">
+            <div class="audit-card-header">WITH VARIABLES</div>
+            <div class="audit-card-number">${audit.summary.withVariablesCount}</div>
+            <div class="audit-card-label">
+              Local: ${audit.summary.withLocalVariablesCount}<br>
+              Global: ${audit.summary.withGlobalVariablesCount}
+            </div>
+          </div>
+
+          <!-- Without Variables -->
+          <div class="audit-card clickable" onclick="showWithoutVariables()">
+            <div class="audit-card-header">NO VARIABLES</div>
+            <div class="audit-card-number">${audit.summary.withoutVariablesCount}</div>
+            <div class="audit-card-label">manual values</div>
+          </div>
+
+          <!-- Coverage -->
+          <div class="audit-card">
+            <div class="audit-card-header">COVERAGE</div>
+            <div class="audit-card-number">${audit.coveragePercentage.toFixed(1)}%</div>
+            <div class="audit-card-label">variables used</div>
+          </div>
+        </div>
+      `;
+
+      // Detailed view area
+      html += '<div id="audit-detail-view"></div>';
+
+      container.innerHTML = html;
+
+      // Store audit data globally for drill-down functions
+      window.currentAudit = audit;
+    }
+
+    // Show nodes with variables in table format
+    function showWithVariables() {
+      const audit = window.currentAudit;
+      if (!audit) return;
+
+      let html = `
+        <div style="margin-top: 20px;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; color: #2a2a2a;">
+            ← Back | Nodes With Variables (${audit.withVariables.length})
+          </h3>
+          <div class="audit-table">
+            <div class="audit-table-header">
+              <div>Node Name</div>
+              <div>Type</div>
+              <div>Variables</div>
+              <div>Local/Global</div>
+              <div>Frame Path</div>
+              <div>Action</div>
+            </div>
+      `;
+
+      for (const node of audit.withVariables) {
+        const variablesList = node.variableBindings
+          .map(b => `${b.property}→${b.variableName}`)
+          .slice(0, 2)
+          .join(', ') + (node.variableBindings.length > 2 ? '...' : '');
+        
+        const classification = node.hasLocalVariables && node.hasGlobalVariables ? 'Mixed' :
+                             node.hasGlobalVariables ? 'Global' : 'Local';
+
+        html += `
+          <div class="audit-table-row">
+            <div class="audit-table-cell"><strong>${node.name}</strong></div>
+            <div class="audit-table-cell">${node.type}</div>
+            <div class="audit-table-cell" style="font-size: 9px;">${variablesList}</div>
+            <div class="audit-table-cell">
+              <span class="classification-badge ${classification.toLowerCase()}">${classification}</span>
+            </div>
+            <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
+            <div class="audit-table-cell">
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Jump</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div></div>';
+      document.getElementById('audit-detail-view').innerHTML = html;
+    }
+
+    // Show nodes without variables in table format  
+    function showWithoutVariables() {
+      const audit = window.currentAudit;
+      if (!audit) return;
+
+      let html = `
+        <div style="margin-top: 20px;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; color: #2a2a2a;">
+            ← Back | Nodes Without Variables (${audit.withoutVariables.length})
+          </h3>
+          <div class="audit-table">
+            <div class="audit-table-header">
+              <div>Node Name</div>
+              <div>Type</div>
+              <div>Issues</div>
+              <div>Frame Path</div>
+              <div>Action</div>
+            </div>
+      `;
+
+      for (const node of audit.withoutVariables) {
+        const issues = node.lintFindings.map(f => f.rule).join(', ') || 'NoVariables';
+
+        html += `
+          <div class="audit-table-row">
+            <div class="audit-table-cell"><strong>${node.name}</strong></div>
+            <div class="audit-table-cell">${node.type}</div>
+            <div class="audit-table-cell" style="font-size: 10px; color: #e74c3c;">${issues}</div>
+            <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
+            <div class="audit-table-cell">
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Jump</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div></div>';
+      document.getElementById('audit-detail-view').innerHTML = html;
+    }
+
+    // Show all nodes (for total auditable)
+    function showAllNodes() {
+      const audit = window.currentAudit;
+      if (!audit) return;
+
+      const allNodes = [...audit.withVariables, ...audit.withoutVariables];
+      
+      let html = `
+        <div style="margin-top: 20px;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; color: #2a2a2a;">
+            ← Back | All Auditable Nodes (${allNodes.length})
+          </h3>
+          <div class="audit-table">
+            <div class="audit-table-header">
+              <div>Node Name</div>
+              <div>Type</div>
+              <div>Status</div>
+              <div>Frame Path</div>
+              <div>Action</div>
+            </div>
+      `;
+
+      for (const node of allNodes) {
+        const status = node.classification === 'NO_VARIABLES' ? 'No Variables' : 'Has Variables';
+        const statusClass = node.classification === 'NO_VARIABLES' ? 'no-vars' : 'has-vars';
+
+        html += `
+          <div class="audit-table-row">
+            <div class="audit-table-cell"><strong>${node.name}</strong></div>
+            <div class="audit-table-cell">${node.type}</div>
+            <div class="audit-table-cell">
+              <span class="status-badge ${statusClass}">${status}</span>
+            </div>
+            <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
+            <div class="audit-table-cell">
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Jump</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div></div>';
+      document.getElementById('audit-detail-view').innerHTML = html;
     }
   </script>
 </body>
