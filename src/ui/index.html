@@ -331,11 +331,22 @@
 
     .audit-card.clickable {
       cursor: pointer;
+      background: #ffffff;
+      border: 2px solid #007acc;
+      box-shadow: 0 2px 4px rgba(0,122,204,0.1);
     }
 
     .audit-card.clickable:hover {
-      background: #e8e8e8;
-      border-color: #999;
+      background: #f0f8ff;
+      border-color: #005a9e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,122,204,0.2);
+    }
+
+    .audit-card:not(.clickable) {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      color: #666;
     }
 
     .audit-card-header {
@@ -353,6 +364,11 @@
       color: #2a2a2a;
       line-height: 1;
       margin-bottom: 4px;
+    }
+
+    .audit-card.clickable .audit-card-number {
+      color: #007acc;
+      font-weight: 800;
     }
 
     .audit-card-label {
@@ -453,9 +469,43 @@
     .jump-btn:hover {
       background: #1a1a1a;
     }
+
+    /* Responsive design for resizable window */
+    @media (max-width: 500px) {
+      .audit-card-grid {
+        grid-template-columns: 1fr !important;
+      }
+      
+      .audit-table-header, .audit-table-row {
+        grid-template-columns: 1fr 1fr 1fr 60px !important;
+        font-size: 9px !important;
+      }
+      
+      .audit-table-header .header-property,
+      .audit-table-row .cell-property {
+        display: none !important;
+      }
+      
+      .audit-table-header .header-frame,
+      .audit-table-row .cell-frame {
+        display: none !important;
+      }
+    }
+
+    @media (min-width: 700px) {
+      .audit-card-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+    }
+
+    @media (min-width: 800px) {
+      .audit-table-header, .audit-table-row {
+        grid-template-columns: 2fr 1fr 2.5fr 1fr 2.5fr 80px !important;
+      }
+    }
   </style>
 </head>
-<body>
+  <body style="position: relative; margin: 0; padding: 0;">
   <div class="container">
     <h2>Variable Bindings Linter</h2>
     
@@ -465,13 +515,25 @@
         No section or frame selected
       </div>
     </div>
-
+    
     <button id="analyze-cta" class="scan-button" disabled>
       Audit Variables
     </button>
 
     <div id="audit-results"></div>
   </div>
+
+  <!-- Resize Handle -->
+  <div id="resize-handle" style="
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    background: linear-gradient(-45deg, transparent 30%, #ccc 30%, #ccc 50%, transparent 50%, transparent 80%, #ccc 80%);
+    background-size: 4px 4px;
+  "></div>
 
       <script>
     let currentIssues = [];
@@ -534,18 +596,18 @@
         analyzeButton.disabled = true;
         analyzeButton.textContent = 'Auditing...';
         
-        parent.postMessage({
-          pluginMessage: {
+      parent.postMessage({
+        pluginMessage: {
             type: 'audit-container',
             containerId: currentSelectionId
-          }
-        }, '*');
+        }
+      }, '*');
 
         document.getElementById('audit-results').innerHTML =
           '<div class="loading">Auditing variable usage...</div>';
       }
     }
-
+    
     // Handle messages from plugin
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
@@ -658,7 +720,7 @@
             </div>
           `;
         }
-        
+
         html += `
           </div>
         </div>
@@ -906,21 +968,14 @@
 
       let html = '';
       
-      // Coverage threshold warning
-      if (audit.coveragePercentage < 80) {
-        html += `
-          <div style="background: #ff6b6b; color: white; padding: 12px; margin-bottom: 16px; border: 1px solid #ccc; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
-            ⚠️ COVERAGE WARNING: Only ${audit.coveragePercentage.toFixed(1)}% of nodes use variables (threshold: 80%)
-          </div>
-        `;
-      }
+
 
       // Summary cards
       html += `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div class="audit-card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
           
           <!-- Total Auditable Nodes -->
-          <div class="audit-card" onclick="showAllNodes()">
+          <div class="audit-card">
             <div class="audit-card-header">TOTAL AUDITABLE</div>
             <div class="audit-card-number">${audit.summary.totalAuditableNodes}</div>
             <div class="audit-card-label">nodes</div>
@@ -928,7 +983,7 @@
 
           <!-- With Variables -->
           <div class="audit-card clickable" onclick="showWithVariables()">
-            <div class="audit-card-header">WITH VARIABLES</div>
+            <div class="audit-card-header">WITH VARIABLES ›</div>
             <div class="audit-card-number">${audit.summary.withVariablesCount}</div>
             <div class="audit-card-label">
               Local: ${audit.summary.withLocalVariablesCount}<br>
@@ -938,7 +993,7 @@
 
           <!-- Without Variables -->
           <div class="audit-card clickable" onclick="showWithoutVariables()">
-            <div class="audit-card-header">NO VARIABLES</div>
+            <div class="audit-card-header">NO VARIABLES ›</div>
             <div class="audit-card-number">${audit.summary.withoutVariablesCount}</div>
             <div class="audit-card-label">manual values</div>
           </div>
@@ -975,9 +1030,9 @@
             <div class="audit-table-header">
               <div>Node Name</div>
               <div>Type</div>
-              <div>Variables</div>
+              <div class="header-property">Variables</div>
               <div>Local/Global</div>
-              <div>Frame Path</div>
+              <div class="header-frame">Frame Path</div>
               <div>Action</div>
             </div>
       `;
@@ -1095,6 +1150,97 @@
       html += '</div></div>';
       document.getElementById('audit-detail-view').innerHTML = html;
     }
+
+    // Handle window resize to make UI responsive
+    function handleResize() {
+      const width = window.innerWidth;
+      const auditCards = document.querySelector('.audit-card-grid');
+      
+      if (auditCards) {
+        if (width < 500) {
+          auditCards.style.gridTemplateColumns = '1fr';
+        } else if (width < 700) {
+          auditCards.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+        } else {
+          auditCards.style.gridTemplateColumns = 'repeat(4, 1fr)';
+        }
+      }
+
+      // Adjust table columns for smaller screens
+      const tables = document.querySelectorAll('.audit-table-header, .audit-table-row');
+      tables.forEach(table => {
+        if (width < 500) {
+          table.style.gridTemplateColumns = '1fr 1fr 1fr 60px';
+          table.style.fontSize = '9px';
+        } else if (width < 800) {
+          table.style.gridTemplateColumns = '2fr 1fr 2fr 1fr 2fr 80px';
+          table.style.fontSize = '10px';
+        } else {
+          table.style.gridTemplateColumns = '2fr 1fr 2.5fr 1fr 2.5fr 80px';
+          table.style.fontSize = '10px';
+        }
+      });
+
+      // Hide/show columns based on width
+      const propertyColumns = document.querySelectorAll('.header-property, .cell-property');
+      const frameColumns = document.querySelectorAll('.header-frame, .cell-frame');
+      
+      if (width < 500) {
+        propertyColumns.forEach(col => col.style.display = 'none');
+        frameColumns.forEach(col => col.style.display = 'none');
+      } else {
+        propertyColumns.forEach(col => col.style.display = 'block');
+        frameColumns.forEach(col => col.style.display = 'block');
+      }
+    }
+
+    // Listen for resize events
+    window.addEventListener('resize', handleResize);
+    
+    // Initial call to set up responsive layout
+    document.addEventListener('DOMContentLoaded', handleResize);
+
+    // Resize handle functionality
+    function initResize() {
+      const resizeHandle = document.getElementById('resize-handle');
+      let isResizing = false;
+      let startX, startY, startWidth, startHeight;
+
+      resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = window.innerWidth;
+        startHeight = window.innerHeight;
+        
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+
+        const width = Math.max(400, startWidth + e.clientX - startX);
+        const height = Math.max(300, startHeight + e.clientY - startY);
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'resize',
+            size: { width, height }
+          }
+        }, '*');
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          document.body.style.userSelect = '';
+        }
+      });
+    }
+
+    // Initialize resize functionality
+    document.addEventListener('DOMContentLoaded', initResize);
   </script>
 </body>
 </html>

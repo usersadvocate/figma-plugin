@@ -193,6 +193,14 @@ export interface CancelMessage {
   type: "cancel";
 }
 
+export interface ResizeMessage {
+  type: "resize";
+  size: {
+    width: number;
+    height: number;
+  };
+}
+
 export interface GetContainerInfoMessage {
   type: "get-container-info";
   containerId: string;
@@ -204,7 +212,8 @@ export type UIMessage =
   | AuditContainerMessage
   | GetContainerInfoMessage
   | JumpToNodeMessage
-  | CancelMessage;
+  | CancelMessage
+  | ResizeMessage;
 
 export interface SectionsLoadedResponse {
   type: "sections-loaded";

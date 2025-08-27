@@ -9,6 +9,12 @@ figma.showUI(__html__, { width: 600, height: 500 });
 
 // Handle messages from the UI
 figma.ui.onmessage = async (msg: UIMessage) => {
+  if (msg.type === "resize") {
+    const { width, height } = msg.size;
+    figma.ui.resize(width, height);
+    return;
+  }
+
   await handleUIMessage(msg);
 };
 
