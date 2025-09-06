@@ -470,37 +470,54 @@
       background: #1a1a1a;
     }
 
+    .audit-table-row.highlighted {
+      background: #e3f2fd;
+      border-left: 3px solid #2196f3;
+      box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+    }
+
+    .audit-table-row.highlighted:hover {
+      background: #e3f2fd;
+    }
+
+    .audit-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
     /* Responsive design for resizable window */
     @media (max-width: 500px) {
       .audit-card-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr;
       }
       
       .audit-table-header, .audit-table-row {
-        grid-template-columns: 1fr 1fr 1fr 60px !important;
-        font-size: 9px !important;
+        grid-template-columns: 1fr 1fr 1fr 60px;
+        font-size: 9px;
       }
       
       .audit-table-header .header-property,
       .audit-table-row .cell-property {
-        display: none !important;
+        display: none;
       }
       
       .audit-table-header .header-frame,
       .audit-table-row .cell-frame {
-        display: none !important;
+        display: none;
       }
     }
 
     @media (min-width: 700px) {
       .audit-card-grid {
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-columns: repeat(4, 1fr);
       }
     }
 
     @media (min-width: 800px) {
       .audit-table-header, .audit-table-row {
-        grid-template-columns: 2fr 1fr 2.5fr 1fr 2.5fr 80px !important;
+        grid-template-columns: 2fr 1fr 2.5fr 1fr 2.5fr 80px;
       }
     }
   </style>
@@ -541,6 +558,18 @@
     // Function to jump to a specific node in Figma
     function jumpToNode(nodeId) {
       console.log('🔍 Jumping to node:', nodeId);
+      
+      // Remove previous highlights
+      document.querySelectorAll('.audit-table-row.highlighted').forEach(row => {
+        row.classList.remove('highlighted');
+      });
+      
+      // Highlight the clicked row
+      const clickedRow = document.querySelector(`[data-node-id="${nodeId}"]`);
+      if (clickedRow) {
+        clickedRow.classList.add('highlighted');
+      }
+      
       parent.postMessage({
         pluginMessage: {
           type: 'jump-to-node',
@@ -972,7 +1001,7 @@
 
       // Summary cards
       html += `
-        <div class="audit-card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div class="audit-card-grid">
           
           <!-- Total Auditable Nodes -->
           <div class="audit-card">
@@ -1047,7 +1076,7 @@
                              node.hasGlobalVariables ? 'Global' : 'Local';
 
         html += `
-          <div class="audit-table-row">
+          <div class="audit-table-row" data-node-id="${node.id}">
             <div class="audit-table-cell"><strong>${node.name}</strong></div>
             <div class="audit-table-cell">${node.type}</div>
             <div class="audit-table-cell" style="font-size: 9px;">${variablesList}</div>
@@ -1090,7 +1119,7 @@
         const issues = node.lintFindings.map(f => f.rule).join(', ') || 'NoVariables';
 
         html += `
-          <div class="audit-table-row">
+          <div class="audit-table-row" data-node-id="${node.id}">
             <div class="audit-table-cell"><strong>${node.name}</strong></div>
             <div class="audit-table-cell">${node.type}</div>
             <div class="audit-table-cell" style="font-size: 10px; color: #e74c3c;">${issues}</div>
@@ -1133,7 +1162,7 @@
         const statusClass = node.classification === 'NO_VARIABLES' ? 'no-vars' : 'has-vars';
 
         html += `
-          <div class="audit-table-row">
+          <div class="audit-table-row" data-node-id="${node.id}">
             <div class="audit-table-cell"><strong>${node.name}</strong></div>
             <div class="audit-table-cell">${node.type}</div>
             <div class="audit-table-cell">
@@ -1153,45 +1182,8 @@
 
     // Handle window resize to make UI responsive
     function handleResize() {
-      const width = window.innerWidth;
-      const auditCards = document.querySelector('.audit-card-grid');
-      
-      if (auditCards) {
-        if (width < 500) {
-          auditCards.style.gridTemplateColumns = '1fr';
-        } else if (width < 700) {
-          auditCards.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
-        } else {
-          auditCards.style.gridTemplateColumns = 'repeat(4, 1fr)';
-        }
-      }
-
-      // Adjust table columns for smaller screens
-      const tables = document.querySelectorAll('.audit-table-header, .audit-table-row');
-      tables.forEach(table => {
-        if (width < 500) {
-          table.style.gridTemplateColumns = '1fr 1fr 1fr 60px';
-          table.style.fontSize = '9px';
-        } else if (width < 800) {
-          table.style.gridTemplateColumns = '2fr 1fr 2fr 1fr 2fr 80px';
-          table.style.fontSize = '10px';
-        } else {
-          table.style.gridTemplateColumns = '2fr 1fr 2.5fr 1fr 2.5fr 80px';
-          table.style.fontSize = '10px';
-        }
-      });
-
-      // Hide/show columns based on width
-      const propertyColumns = document.querySelectorAll('.header-property, .cell-property');
-      const frameColumns = document.querySelectorAll('.header-frame, .cell-frame');
-      
-      if (width < 500) {
-        propertyColumns.forEach(col => col.style.display = 'none');
-        frameColumns.forEach(col => col.style.display = 'none');
-      } else {
-        propertyColumns.forEach(col => col.style.display = 'block');
-        frameColumns.forEach(col => col.style.display = 'block');
-      }
+      // CSS media queries now handle all responsive behavior
+      // No need for JavaScript-based inline styles
     }
 
     // Listen for resize events

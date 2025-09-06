@@ -109,22 +109,51 @@ export async function auditContainer(
   }
 }
 
+// Helper function to check if a node is effectively visible (not hidden by itself or parents)
+function isNodeEffectivelyVisible(
+  node: SceneNode,
+  rootFrame?: FrameNode
+): boolean {
+  // Check if this node is directly hidden
+  if ("visible" in node && node.visible === false) {
+    return false;
+  }
+
+  // Check if any parent in the hierarchy is hidden (up to the root frame)
+  let parent = node.parent;
+  while (parent && parent !== rootFrame) {
+    if ("visible" in parent && parent.visible === false) {
+      return false;
+    }
+    parent = parent.parent;
+  }
+
+  return true;
+}
+
 // Collect all auditable nodes from a container
 async function collectAuditableNodes(
   container: SceneNode
 ): Promise<SceneNode[]> {
   const nodes: SceneNode[] = [];
 
-  function traverse(node: SceneNode) {
-    // Check if this node type is auditable
+  function traverse(node: SceneNode, rootFrame?: FrameNode) {
+    // Check if this node type is auditable and visible
     if (AUDITABLE_NODE_TYPES.includes(node.type as AuditableNodeType)) {
-      nodes.push(node);
+      const isVisible = isNodeEffectivelyVisible(node, rootFrame);
+      if (isVisible) {
+        nodes.push(node);
+      } else {
+        console.log(
+          `🙈 Excluding hidden node from audit: "${node.name}" (${node.type})`
+        );
+      }
     }
 
     // Recursively traverse children
     if ("children" in node && node.children) {
       for (const child of node.children) {
-        traverse(child);
+        traverse(child, rootFrame);
       }
     }
   }
@@ -132,11 +161,13 @@ async function collectAuditableNodes(
   if (container.type === "SECTION") {
     // For sections, analyze child frames
     for (const child of container.children) {
-      traverse(child);
+      if (child.type === "FRAME") {
+        traverse(child, child as FrameNode);
+      }
     }
   } else {
     // For frames, analyze the frame itself and its children
-    traverse(container);
+    traverse(container, container as FrameNode);
   }
 
   return nodes;

@@ -251,6 +251,7 @@ src/
 - [ ] **Rule #4**: Basic functionality tested
 - [ ] **Rule #5**: Commit message follows format
 - [ ] **Rule #13**: Solutions built forward, not reverted
+- [ ] **Rule #14**: No !important declarations in CSS
 - [ ] No critical security issues
 - [ ] No broken functionality
 
@@ -304,6 +305,7 @@ src/
 ### Automatic Build Process:
 
 - [ ] **Run `npm run build` after every code change**
+- [ ] **AI Assistant automatically builds after making updates**
 - [ ] Ensure dist/ folder is updated with latest TypeScript compilation
 - [ ] Verify build completes successfully before testing
 - [ ] Rebuild is required for Figma plugin to use latest changes
@@ -373,6 +375,105 @@ npm run copy:ui         # Copy UI files only
 - Develops problem-solving skills and architectural thinking
 - Prevents accumulation of technical debt through quick fixes
 - Creates learning opportunities from every challenge
+
+---
+
+## 🎨 Rule #14: CSS Best Practices - No !important
+
+**Status: ACTIVE** | **Priority: HIGH**
+
+### CSS Quality Standards:
+
+- [ ] **Never use `!important` declarations** in CSS
+- [ ] Use proper CSS specificity instead of forcing styles
+- [ ] Structure CSS with logical hierarchy and cascade
+- [ ] Use CSS classes and IDs appropriately for specificity
+- [ ] Prefer CSS custom properties (variables) for maintainable styling
+
+### Why Avoid !important:
+
+- **Maintainability**: Makes CSS harder to override and debug
+- **Specificity Wars**: Creates conflicts that require more !important to fix
+- **Cascade Violation**: Breaks the natural CSS cascade flow
+- **Debugging Difficulty**: Makes it harder to trace style origins
+- **Future Flexibility**: Prevents easy style modifications later
+
+### Proper Alternatives:
+
+1. **Increase Specificity Naturally**:
+
+   ```css
+   /* Instead of: */
+   .button {
+     color: red !important;
+   }
+
+   /* Use: */
+   .container .button {
+     color: red;
+   }
+   ```
+
+2. **Use CSS Custom Properties**:
+
+   ```css
+   :root {
+     --button-color: red;
+   }
+   .button {
+     color: var(--button-color);
+   }
+   ```
+
+3. **Structure CSS with Logical Hierarchy**:
+
+   ```css
+   .component {
+     /* base styles */
+   }
+   .component--variant {
+     /* variant styles */
+   }
+   .component.is-active {
+     /* state styles */
+   }
+   ```
+
+4. **Use CSS Modules or Scoped Styles**:
+   ```css
+   .component__button {
+     /* scoped styles */
+   }
+   ```
+
+### Exception Cases (Rare):
+
+- [ ] Third-party library overrides (document the reason)
+- [ ] Critical accessibility fixes (temporary, with plan to refactor)
+- [ ] Print styles that must override screen styles
+
+### Code Review Checklist:
+
+- [ ] No `!important` declarations found in CSS
+- [ ] CSS specificity is logical and maintainable
+- [ ] Styles can be easily overridden when needed
+- [ ] CSS structure follows component-based organization
+- [ ] Custom properties used for theme values
+
+### Tools for Enforcement:
+
+- [ ] Use CSS linting tools (stylelint) to catch !important
+- [ ] Regular code reviews focus on CSS quality
+- [ ] Automated checks in CI/CD pipeline
+- [ ] Documentation of CSS architecture decisions
+
+### Rationale:
+
+- Promotes maintainable and scalable CSS architecture
+- Prevents specificity wars and debugging nightmares
+- Encourages proper CSS organization and component thinking
+- Makes the codebase more accessible to new developers
+- Aligns with modern CSS best practices and methodologies
 
 ---
 
