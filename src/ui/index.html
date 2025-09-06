@@ -555,9 +555,9 @@
       <script>
     let currentIssues = [];
 
-    // Function to jump to a specific node in Figma
+    // Function to highlight a specific node in Figma
     function jumpToNode(nodeId) {
-      console.log('🔍 Jumping to node:', nodeId);
+      console.log('🎯 Highlighting node:', nodeId);
       
       // Remove previous highlights
       document.querySelectorAll('.audit-table-row.highlighted').forEach(row => {
@@ -671,8 +671,8 @@
       }
 
       if (msg.type === 'node-jumped') {
-        // Node jump completed - no notification needed
-        console.log(`🎯 Jumped to ${msg.nodeType}: "${msg.nodeName}"`);
+        // Node highlight completed - no notification needed
+        console.log(`🎯 Highlighted ${msg.nodeType}: "${msg.nodeName}"`);
       }
 
       if (msg.type === 'audit-result') {
@@ -1085,7 +1085,7 @@
             </div>
             <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
             <div class="audit-table-cell">
-              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Jump</button>
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Highlight</button>
             </div>
           </div>
         `;
@@ -1125,7 +1125,7 @@
             <div class="audit-table-cell" style="font-size: 10px; color: #e74c3c;">${issues}</div>
             <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
             <div class="audit-table-cell">
-              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Jump</button>
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Highlight</button>
             </div>
           </div>
         `;
@@ -1170,7 +1170,7 @@
             </div>
             <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
             <div class="audit-table-cell">
-              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Jump</button>
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Highlight</button>
             </div>
           </div>
         `;

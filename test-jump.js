@@ -14,13 +14,13 @@ try {
   const jumpFunction = mainContent.includes('async function jumpToNode');
   const jumpHandler = mainContent.includes('jump-to-node');
   const selectionCode = mainContent.includes('figma.currentPage.selection');
-  const scrollCode = mainContent.includes('scrollAndZoomIntoView');
+  const noScrollCode = !mainContent.includes('scrollAndZoomIntoView');
   const nodeJumpedMessage = mainContent.includes('node-jumped');
 
   console.log(`✅ jumpToNode function: ${jumpFunction ? '✓ Found' : '❌ Missing'}`);
   console.log(`✅ jump-to-node handler: ${jumpHandler ? '✓ Found' : '❌ Missing'}`);
-  console.log(`✅ Node selection code: ${selectionCode ? '✓ Found' : '❌ Missing'}`);
-  console.log(`✅ Scroll/zoom code: ${scrollCode ? '✓ Found' : '❌ Missing'}`);
+  console.log(`✅ Element selection: ${selectionCode ? '✓ Found (good)' : '❌ Missing'}`);
+  console.log(`✅ No viewport movement: ${noScrollCode ? '✓ No scroll/zoom (good)' : '❌ Still scrolling'}`);
   console.log(`✅ Node jumped message: ${nodeJumpedMessage ? '✓ Found' : '❌ Missing'}`);
 
   console.log('\n📋 Checking UI (src/ui/index.html):');
@@ -29,13 +29,13 @@ try {
   const clickHandler = uiContent.includes('onclick="jumpToNode');
   const hoverEffect = uiContent.includes('onmouseover');
   const cursorPointer = uiContent.includes('cursor: pointer');
-  const jumpButton = uiContent.includes('>🔍</button>');
+  const highlightButton = uiContent.includes('>Highlight</button>');
   const jumpJsFunction = uiContent.includes('function jumpToNode');
 
   console.log(`✅ Click handler: ${clickHandler ? '✓ Found' : '❌ Missing'}`);
   console.log(`✅ Hover effects: ${hoverEffect ? '✓ Found' : '❌ Missing'}`);
   console.log(`✅ Pointer cursor: ${cursorPointer ? '✓ Found' : '❌ Missing'}`);
-  console.log(`✅ Jump button (🔍): ${jumpButton ? '✓ Found' : '❌ Missing'}`);
+  console.log(`✅ Highlight button: ${highlightButton ? '✓ Found' : '❌ Missing'}`);
   console.log(`✅ JavaScript function: ${jumpJsFunction ? '✓ Found' : '❌ Missing'}`);
 
   console.log('\n📋 Checking Built Files (dist/):');
@@ -48,8 +48,8 @@ try {
   console.log(`✅ Built HTML: ${builtHtml ? '✓ Found' : '❌ Missing'}`);
 
   // Count all checks
-  const checks = [jumpFunction, jumpHandler, selectionCode, scrollCode, nodeJumpedMessage,
-                  clickHandler, hoverEffect, cursorPointer, jumpButton, jumpJsFunction,
+  const checks = [jumpFunction, jumpHandler, selectionCode, noScrollCode, nodeJumpedMessage,
+                  clickHandler, hoverEffect, cursorPointer, highlightButton, jumpJsFunction,
                   builtJs, builtHtml];
 
   const passed = checks.filter(Boolean).length;

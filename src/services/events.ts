@@ -5,10 +5,10 @@ import { analyzeContainerContent } from "../analysis/nodes";
 import { auditContainer } from "../analysis/audit";
 import { UIMessage } from "../types";
 
-// Helper function to jump to a specific node in Figma
+// Helper function to highlight a specific node in Figma (without viewport movement)
 export async function jumpToNode(nodeId: string) {
   try {
-    console.log("🔍 Jumping to node:", nodeId);
+    console.log("🎯 Highlighting node:", nodeId);
     const node = await figma.getNodeByIdAsync(nodeId);
 
     if (!node) {
@@ -21,20 +21,19 @@ export async function jumpToNode(nodeId: string) {
       return;
     }
 
-    // Scroll to and select the node
+    // Select the node to highlight it, but don't move the viewport
     figma.currentPage.selection = [node as SceneNode];
-    await figma.viewport.scrollAndZoomIntoView([node as SceneNode]);
 
-    console.log(`✅ Successfully jumped to "${node.name}" (${node.type})`);
+    console.log(`✅ Successfully highlighted "${node.name}" (${node.type})`);
 
-    // Notify UI about successful jump
+    // Notify UI about successful highlight
     figma.ui.postMessage({
       type: "node-jumped",
       nodeName: node.name,
       nodeType: node.type,
     });
   } catch (error) {
-    console.error("💥 Error jumping to node:", nodeId, error);
+    console.error("💥 Error highlighting node:", nodeId, error);
     figma.ui.postMessage({
       type: "node-jumped",
       nodeName: "Error",
