@@ -1,20 +1,20 @@
 # Linter Project Development Rules
 
-## 🎯 Rule #1: Always Resolve Problems After Code Updates
+## 🎯 Rule #1: Build and Problem Resolution
 
 **Status: ACTIVE** | **Priority: CRITICAL**
 
-### Automated Resolution Process:
+### After Every Code Change:
 
-1. **Build the project** after every code change
+1. **Build the project**
    ```bash
    npm run build
    ```
-2. **Run linting** and fix issues automatically
+2. **Run linting** and fix issues
    ```bash
    npx eslint src/main.ts --fix
    ```
-3. **Verify compilation** - ensure no TypeScript errors
+3. **Verify compilation** - no TypeScript errors
 4. **Test in Figma** - reload plugin and verify functionality
 
 ### Manual Checks:
@@ -32,56 +32,30 @@
 
 ### TypeScript Requirements:
 
-- [ ] No `any` types without proper justification
+- [ ] No `any` types without justification
 - [ ] All imports must be used or removed
-- [ ] All variables must be used or prefixed with `_`
-- [ ] Functions must have proper return types
-- [ ] Async functions must handle errors appropriately
+- [ ] Unused variables prefixed with `_`
+- [ ] Functions have proper return types
+- [ ] Async functions handle errors with try-catch
 
 ### Naming Conventions:
 
 - [ ] Functions: camelCase
-- [ ] Interfaces: PascalCase
-- [ ] Types: PascalCase
+- [ ] Interfaces/Types: PascalCase
 - [ ] Constants: SCREAMING_SNAKE_CASE
 - [ ] Files: kebab-case
 
-### Documentation:
+### CSS Standards:
 
-- [ ] Complex functions must have JSDoc comments
-- [ ] Public APIs must be documented
-- [ ] TODO comments must be tracked and resolved
+- [ ] **Never use `!important` declarations**
+- [ ] Use proper CSS specificity instead
+- [ ] Use CSS custom properties for maintainable styling
 
 ---
 
-## 🚀 Rule #3: Build and Deployment
+## 🧪 Rule #3: Testing and Validation
 
 **Status: ACTIVE** | **Priority: HIGH**
-
-### Build Process:
-
-- [ ] Always build before committing changes
-- [ ] Verify build output in `dist/` directory
-- [ ] Test plugin in Figma after build
-- [ ] Update version in package.json for releases
-
-### File Structure:
-
-```
-dist/
-  ├── code.js        # Compiled plugin code
-  └── ui.html        # Plugin UI interface
-src/
-  ├── main.ts        # Main plugin logic
-  ├── services/      # Business logic modules
-  └── ui/            # User interface files
-```
-
----
-
-## 🧪 Rule #4: Testing and Validation
-
-**Status: ACTIVE** | **Priority: MEDIUM**
 
 ### Manual Testing Checklist:
 
@@ -89,20 +63,21 @@ src/
 - [ ] UI renders correctly
 - [ ] Section detection works
 - [ ] Variable resolution displays correctly
-- [ ] Shape property analysis functions
 - [ ] Error handling works gracefully
-
-### Performance Testing:
-
 - [ ] Plugin responds within 2 seconds for typical sections
-- [ ] Memory usage remains reasonable
-- [ ] No blocking operations in main thread
 
 ---
 
-## 📝 Rule #5: Commit and Documentation
+## 🚀 Rule #4: Development Workflow
 
-**Status: ACTIVE** | **Priority: MEDIUM**
+**Status: ACTIVE** | **Priority: HIGH**
+
+### Daily Workflow:
+
+1. **Pull latest changes** from main branch
+2. **Make changes** following coding standards
+3. **Build and test** (Rule #1)
+4. **Commit with clear message**
 
 ### Commit Message Format:
 
@@ -111,147 +86,65 @@ src/
 
 - Detail 1
 - Detail 2
-- Fixes #issue-number
 ```
 
-### Types:
+**Types:** `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `test:` Adding tests
-- `chore:` Maintenance tasks
+### Git Control:
 
-### Documentation Requirements:
-
-- [ ] Update README.md for new features
-- [ ] Document breaking changes
-- [ ] Update API documentation if needed
+- [ ] **Do not commit or push until explicitly asked**
+- [ ] Wait for user confirmation before any git operations
+- [ ] Allow user full control over when changes are committed
 
 ---
 
-## 🔧 Rule #6: Development Workflow
-
-**Status: ACTIVE** | **Priority: MEDIUM**
-
-### Daily Workflow:
-
-1. **Pull latest changes** from main branch
-2. **Create feature branch** for new work
-3. **Make changes** following coding standards
-4. **Resolve problems** (Rule #1)
-5. **Test thoroughly** in Figma
-6. **Commit with clear message**
-7. **Create pull request** for review
-
-### Code Review Checklist:
-
-- [ ] Code follows project rules
-- [ ] No unresolved ESLint issues
-- [ ] Tests pass (if applicable)
-- [ ] Documentation updated
-- [ ] Breaking changes documented
-
----
-
-## 🚨 Rule #7: Error Handling and Logging
+## 🚨 Rule #5: Error Handling and Performance
 
 **Status: ACTIVE** | **Priority: HIGH**
 
-### Error Handling Requirements:
+### Error Handling:
 
-- [ ] All async operations must have try-catch blocks
-- [ ] User-facing errors must have helpful messages
-- [ ] Fallback behavior for failed operations
+- [ ] All async operations have try-catch blocks
+- [ ] User-facing errors have helpful messages
 - [ ] Graceful degradation when features fail
 
-### Logging Standards:
-
-- [ ] Use console.log for debugging (remove in production)
-- [ ] Use descriptive error messages
-- [ ] Include relevant context in error logs
-- [ ] Don't log sensitive information
-
----
-
-## 🎨 Rule #8: UI/UX Standards
-
-**Status: ACTIVE** | **Priority: MEDIUM**
-
-### UI Requirements:
-
-- [ ] Consistent styling with design system
-- [ ] Responsive design for different screen sizes
-- [ ] Clear visual hierarchy
-- [ ] Loading states for async operations
-- [ ] Error states with helpful messages
-
-### Accessibility:
-
-- [ ] Sufficient color contrast
-- [ ] Keyboard navigation support
-- [ ] Screen reader compatibility
-- [ ] Clear focus indicators
-
----
-
-## 📊 Rule #9: Performance Optimization
-
-**Status: ACTIVE** | **Priority: MEDIUM**
-
-### Performance Requirements:
+### Performance:
 
 - [ ] Minimize API calls to Figma
 - [ ] Use efficient data structures
 - [ ] Avoid blocking operations
 - [ ] Cache results when appropriate
-- [ ] Lazy load heavy operations
-
-### Metrics to Monitor:
-
-- [ ] Plugin load time
-- [ ] Analysis speed
-- [ ] Memory usage
-- [ ] API call frequency
 
 ---
 
-## 🔄 Rule #10: Maintenance and Updates
+## ⚡ Rule #6: Forward-Thinking Solutions
 
-**Status: ACTIVE** | **Priority: LOW**
+**Status: ACTIVE** | **Priority: HIGH**
 
-### Regular Maintenance Tasks:
+### Solution Philosophy:
 
-- [ ] Update dependencies quarterly
-- [ ] Review and update Node.js version
-- [ ] Test with latest Figma features
-- [ ] Update documentation
-- [ ] Clean up unused code
+- [ ] **Build forward to new solutions** rather than reverting
+- [ ] Use problems as opportunities to improve the codebase
+- [ ] Consider how solutions impact future development
+- [ ] Address root causes, not just symptoms
 
-### Deprecation Handling:
+### When to Revert (Rare):
 
-- [ ] Mark deprecated features clearly
-- [ ] Provide migration guides
-- [ ] Maintain backward compatibility
-- [ ] Remove deprecated code in major versions
+- [ ] Critical production bugs needing immediate rollback
+- [ ] Security vulnerabilities requiring immediate mitigation
+- [ ] Breaking changes affecting dependent systems
 
 ---
 
-## 📋 Rule Compliance Checklist
+## 📋 Pre-Commit Checklist
 
 **Use this before committing:**
 
-### Pre-Commit Checklist:
-
-- [ ] **Rule #1**: Problems resolved after code updates
+- [ ] **Rule #1**: Build successful and problems resolved
 - [ ] **Rule #2**: Code quality standards met
-- [ ] **Rule #3**: Build successful and tested
-- [ ] **Rule #4**: Basic functionality tested
-- [ ] **Rule #5**: Commit message follows format
-- [ ] **Rule #13**: Solutions built forward, not reverted
-- [ ] **Rule #14**: No !important declarations in CSS
+- [ ] **Rule #3**: Basic functionality tested
+- [ ] **Rule #4**: Commit message follows format
+- [ ] **Rule #6**: Solutions built forward, not reverted
 - [ ] No critical security issues
 - [ ] No broken functionality
 
@@ -259,7 +152,7 @@ src/
 
 ## 🚨 Emergency Rules
 
-**Only break these rules if absolutely necessary:**
+**Never break these rules:**
 
 1. **Never** commit broken builds to main branch
 2. **Never** expose sensitive user data
@@ -269,212 +162,17 @@ src/
 
 ---
 
-## 📞 Contact and Support
+## 🔄 Maintenance (Monthly)
 
-- **Lead Developer:** Julia Pchelova
-- **Project Repository:** [GitHub Link]
-- **Issues:** Use GitHub Issues for bug reports and feature requests
-- **Discussions:** Use GitHub Discussions for questions and ideas
+**Status: ACTIVE** | **Priority: LOW**
 
----
+### Regular Tasks:
 
-## 📋 Rule #11: Commit and Push Control
-
-**Status: ACTIVE** | **Priority: CRITICAL**
-
-### Development Workflow Control:
-
-- [ ] **Do not commit or push until explicitly asked**
-- [ ] Wait for user confirmation before any git operations
-- [ ] Allow user full control over when changes are committed
-- [ ] Maintain conversation-based rule confirmation
-
-### Rationale:
-
-- Gives user complete control over repository state
-- Prevents accidental commits of work-in-progress
-- Allows for review and testing before finalizing changes
-- Maintains clear communication about repository updates
+- [ ] Update dependencies
+- [ ] Test with latest Figma features
+- [ ] Clean up unused code
+- [ ] Update documentation
 
 ---
 
-## 🔨 Rule #12: Build After Code Updates
-
-**Status: ACTIVE** | **Priority: HIGH**
-
-### Automatic Build Process:
-
-- [ ] **Run `npm run build` after every code change**
-- [ ] **AI Assistant automatically builds after making updates**
-- [ ] Ensure dist/ folder is updated with latest TypeScript compilation
-- [ ] Verify build completes successfully before testing
-- [ ] Rebuild is required for Figma plugin to use latest changes
-
-### Build Commands:
-
-```bash
-npm run build           # Full build (main + UI)
-npm run build:main      # Compile TypeScript only
-npm run copy:ui         # Copy UI files only
-```
-
-### Rationale:
-
-- Figma plugins run from compiled dist/ files, not source
-- TypeScript changes need compilation to take effect
-- Prevents testing outdated code in Figma
-- Ensures consistent development workflow
-
----
-
-## ⚡ Rule #13: Forward-Thinking Problem Resolution
-
-**Status: ACTIVE** | **Priority: HIGH**
-
-### Solution Philosophy:
-
-- [ ] **Build forward to new solutions** rather than reverting to previous ones
-- [ ] When encountering problems, seek innovative approaches that improve the codebase
-- [ ] Avoid the temptation to simply undo changes when issues arise
-- [ ] Use problems as opportunities to create better, more robust solutions
-
-### Forward-Building Approach:
-
-1. **Analyze the root cause** of the problem thoroughly
-2. **Consider multiple solution paths** before choosing one
-3. **Design solutions that address both the immediate issue and potential future problems**
-4. **Refactor and improve** existing code as part of the solution
-5. **Document the reasoning** behind the chosen approach
-
-### Problem-Solving Strategy:
-
-- [ ] Identify what the problem is teaching us about the codebase
-- [ ] Look for systemic improvements that can prevent similar issues
-- [ ] Consider how the solution will impact future development
-- [ ] Ensure the new solution is more maintainable than the original
-- [ ] Test thoroughly to validate the forward-thinking approach
-
-### When NOT to Revert:
-
-- [ ] When the problem reveals architectural weaknesses
-- [ ] When a new approach would improve code quality
-- [ ] When the issue points to missing abstractions or patterns
-- [ ] When reverting would leave technical debt unaddressed
-
-### Acceptable Reversion Cases:
-
-- [ ] Critical production bugs that need immediate rollback
-- [ ] Security vulnerabilities requiring immediate mitigation
-- [ ] Breaking changes that affect dependent systems
-- [ ] Deadlines that prevent proper forward-building solutions
-
-### Rationale:
-
-- Encourages continuous improvement and innovation
-- Builds a more robust and maintainable codebase over time
-- Develops problem-solving skills and architectural thinking
-- Prevents accumulation of technical debt through quick fixes
-- Creates learning opportunities from every challenge
-
----
-
-## 🎨 Rule #14: CSS Best Practices - No !important
-
-**Status: ACTIVE** | **Priority: HIGH**
-
-### CSS Quality Standards:
-
-- [ ] **Never use `!important` declarations** in CSS
-- [ ] Use proper CSS specificity instead of forcing styles
-- [ ] Structure CSS with logical hierarchy and cascade
-- [ ] Use CSS classes and IDs appropriately for specificity
-- [ ] Prefer CSS custom properties (variables) for maintainable styling
-
-### Why Avoid !important:
-
-- **Maintainability**: Makes CSS harder to override and debug
-- **Specificity Wars**: Creates conflicts that require more !important to fix
-- **Cascade Violation**: Breaks the natural CSS cascade flow
-- **Debugging Difficulty**: Makes it harder to trace style origins
-- **Future Flexibility**: Prevents easy style modifications later
-
-### Proper Alternatives:
-
-1. **Increase Specificity Naturally**:
-
-   ```css
-   /* Instead of: */
-   .button {
-     color: red !important;
-   }
-
-   /* Use: */
-   .container .button {
-     color: red;
-   }
-   ```
-
-2. **Use CSS Custom Properties**:
-
-   ```css
-   :root {
-     --button-color: red;
-   }
-   .button {
-     color: var(--button-color);
-   }
-   ```
-
-3. **Structure CSS with Logical Hierarchy**:
-
-   ```css
-   .component {
-     /* base styles */
-   }
-   .component--variant {
-     /* variant styles */
-   }
-   .component.is-active {
-     /* state styles */
-   }
-   ```
-
-4. **Use CSS Modules or Scoped Styles**:
-   ```css
-   .component__button {
-     /* scoped styles */
-   }
-   ```
-
-### Exception Cases (Rare):
-
-- [ ] Third-party library overrides (document the reason)
-- [ ] Critical accessibility fixes (temporary, with plan to refactor)
-- [ ] Print styles that must override screen styles
-
-### Code Review Checklist:
-
-- [ ] No `!important` declarations found in CSS
-- [ ] CSS specificity is logical and maintainable
-- [ ] Styles can be easily overridden when needed
-- [ ] CSS structure follows component-based organization
-- [ ] Custom properties used for theme values
-
-### Tools for Enforcement:
-
-- [ ] Use CSS linting tools (stylelint) to catch !important
-- [ ] Regular code reviews focus on CSS quality
-- [ ] Automated checks in CI/CD pipeline
-- [ ] Documentation of CSS architecture decisions
-
-### Rationale:
-
-- Promotes maintainable and scalable CSS architecture
-- Prevents specificity wars and debugging nightmares
-- Encourages proper CSS organization and component thinking
-- Makes the codebase more accessible to new developers
-- Aligns with modern CSS best practices and methodologies
-
----
-
-_These rules are living guidelines and can be updated as the project evolves. Always use best judgment and document any rule exceptions._
+_These rules are living guidelines and can be updated as the project evolves._
