@@ -998,12 +998,24 @@
         // Clear previous results (id may be 'audit-results')
         const resultsEl = document.getElementById('audit-results') || document.getElementById('analysis-results');
         if (resultsEl) resultsEl.innerHTML = '';
+        
+        // Show the help button again when selection changes
+        const helpButton = document.getElementById('show-onboarding-again');
+        if (helpButton) {
+          helpButton.style.display = 'block';
+        }
       } else if (currentSelectionDiv) {
         currentSelectionDiv.textContent = 'Nothing selected';
         currentSelectionDiv.classList.remove('has-selection');
         if (analyzeButton) analyzeButton.disabled = true;
         const resultsEl = document.getElementById('audit-results') || document.getElementById('analysis-results');
         if (resultsEl) resultsEl.innerHTML = '';
+        
+        // Show the help button again when nothing is selected
+        const helpButton = document.getElementById('show-onboarding-again');
+        if (helpButton) {
+          helpButton.style.display = 'block';
+        }
       }
     }
 
@@ -1067,6 +1079,12 @@
         // Reset button state
         analyzeButton.disabled = false;
         analyzeButton.textContent = 'Audit Variables';
+        
+        // Hide the help button since user is now seeing the actual functionality
+        const helpButton = document.getElementById('show-onboarding-again');
+        if (helpButton) {
+          helpButton.style.display = 'none';
+        }
         
         displayAuditResult(msg.audit);
       }
