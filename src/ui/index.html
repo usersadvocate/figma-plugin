@@ -86,6 +86,174 @@
       cursor: not-allowed;
     }
     
+    /* Onboarding Styles */
+    .onboarding {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .onboarding-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .onboarding-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    
+    .skip-btn {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #666;
+      cursor: pointer;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .skip-btn:hover {
+      background: #f5f5f5;
+      border-color: #ccc;
+    }
+    
+    .onboarding-content {
+      margin-bottom: 20px;
+    }
+    
+    .problem-section, .solution-section, .benefits {
+      margin-bottom: 20px;
+    }
+    
+    .problem-section h4, .solution-section h4, .benefits h4 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    
+    .problem-section p, .solution-section p {
+      margin: 0 0 15px 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #444;
+    }
+    
+    .example-bad, .example-good {
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .example-label {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .example-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    
+    .token {
+      background: #e8f5e8;
+      color: #2d5a2d;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+    
+    .arbitrary {
+      background: #ffe8e8;
+      color: #8b2d2d;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+    
+    .benefits ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .benefits li {
+      margin-bottom: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #444;
+    }
+    
+    .onboarding-footer {
+      text-align: center;
+      padding-top: 15px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .start-btn {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: background 0.2s ease;
+    }
+    
+    .start-btn:hover {
+      background: #005a9e;
+    }
+    
+    .main-interface {
+      transition: opacity 0.3s ease;
+    }
+    
+    .help-link {
+      text-align: center;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .help-btn {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #666;
+      cursor: pointer;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+    }
+    
+    .help-btn:hover {
+      background: #f5f5f5;
+      border-color: #ccc;
+      color: #333;
+    }
+    
     .issues-container {
       max-height: 400px;
       overflow-y: auto;
@@ -229,23 +397,31 @@
       color: #495057;
     }
 
+    .instruction-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #2a2a2a;
+      margin-bottom: 6px;
+    }
+
     .current-selection {
-      background: #fff;
-      border: 1px solid #dee2e6;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
       border-radius: 3px;
       padding: 8px 12px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      color: #6c757d;
+      color: #666;
       min-height: 16px;
       display: flex;
       align-items: center;
     }
-
+    
     .current-selection.has-selection {
-      color: #28a745;
-      border-color: #28a745;
-      background: #f8fff9;
+      color: #2e7d32;
+      border-color: #4caf50;
+      background: #e8f5e8;
+      font-weight: 600;
     }
 
     .component-analysis-card {
@@ -524,20 +700,71 @@
 </head>
   <body style="position: relative; margin: 0; padding: 0;">
   <div class="container">
-    <h2>Variable Bindings Linter</h2>
-    
-    <div class="instructions">
-      <p>📍 <strong>Click on any section or frame</strong> in Figma to analyze its variable bindings.</p>
-      <div id="current-selection" class="current-selection">
-        No section or frame selected
+    <!-- Onboarding Section -->
+    <div id="onboarding" class="onboarding">
+      <div class="onboarding-header">
+        <h3>🎯 What does this linter do?</h3>
+        <button id="skip-onboarding" class="skip-btn" onclick="handleSkipOnboarding()">Skip</button>
       </div>
+      
+      <div class="onboarding-content">
+        <div class="problem-section">
+          <h4>❌ The Problem</h4>
+          <p>Your design files often mix <strong>design tokens</strong> (consistent values) with <strong>arbitrary values</strong> (hardcoded numbers), making your design system inconsistent and hard to maintain.</p>
+          
+          <div class="example-bad">
+            <div class="example-label">❌ Inconsistent</div>
+            <div class="example-code">
+              <span class="token">Spacing: 16px</span> (token) + <span class="arbitrary">Padding: 12px</span> (arbitrary)
+            </div>
+          </div>
+        </div>
+        
+        <div class="solution-section">
+          <h4>✅ The Solution</h4>
+          <p>This linter scans your selected frames and shows you exactly where you're using design tokens vs. arbitrary values, helping you maintain consistency.</p>
+          
+          <div class="example-good">
+            <div class="example-label">✅ Consistent</div>
+            <div class="example-code">
+              <span class="token">Spacing: 16px</span> (token) + <span class="token">Padding: 16px</span> (token)
+            </div>
+          </div>
+        </div>
+        
+        <div class="benefits">
+          <h4>🚀 Benefits</h4>
+          <ul>
+            <li>🔍 <strong>Find inconsistencies</strong> in your design system</li>
+            <li>📊 <strong>See coverage</strong> of design token usage</li>
+            <li>🎯 <strong>Identify areas</strong> that need tokenization</li>
+            <li>⚡ <strong>Maintain consistency</strong> across your designs</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="onboarding-footer">
+        <button id="start-audit" class="start-btn" onclick="handleStartAudit()">Start Auditing →</button>
+      </div>
+    </div>
+    
+    <!-- Main Interface (hidden initially) -->
+    <div id="main-interface" class="main-interface" style="display: none;">
+    <div class="instructions">
+      <p style="margin:0 0 12px 0; font-size: 12px; line-height: 1.4; color: #495057;">📍 <strong>Click on any section or frame</strong> in Figma to analyze its variable bindings.</p>
+      <div id="current-selection" class="current-selection">Nothing selected</div>
     </div>
     
     <button id="analyze-cta" class="scan-button" disabled>
       Audit Variables
     </button>
+      
+      <div class="help-link">
+        <button id="show-onboarding-again" class="help-btn" onclick="handleShowOnboardingAgain()">ℹ️ What does this linter do?</button>
+      </div>
 
     <div id="audit-results"></div>
+    </div>
   </div>
 
   <!-- Resize Handle -->
@@ -580,18 +807,164 @@
 
 
 
-    // State management
-    let currentSelectionId = null;
-    let currentSelectionName = null;
-    let currentSelectionType = null;
+    // Global variable to track if user has skipped onboarding (persists for this session)
+    var hasSkippedOnboarding = false;
+    
+    // Global functions for button clicks - this will work no matter what
+    function handleSkipOnboarding() {
+      console.log('Skip button clicked - permanently skipping onboarding for this session!');
+      
+      // Mark that user has skipped onboarding for this session
+      hasSkippedOnboarding = true;
+      
+      // Hide onboarding and show main interface
+      document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('main-interface').style.display = 'block';
+      
+      // Show standard message
+      var currentSelectionDiv = document.getElementById('current-selection');
+      if (currentSelectionDiv) {
+        currentSelectionDiv.textContent = 'Nothing selected';
+        currentSelectionDiv.classList.remove('has-selection');
+        // Reset any special styling
+        currentSelectionDiv.style.background = '';
+        currentSelectionDiv.style.borderColor = '';
+        currentSelectionDiv.style.color = '';
+      }
+    }
+    
+    function handleStartAudit() {
+      console.log('Start audit button clicked - guiding user to select frame!');
+      
+      // Hide onboarding and show main interface
+      document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('main-interface').style.display = 'block';
+      
+      // Show encouraging message to guide user to select a frame
+      var currentSelectionDiv = document.getElementById('current-selection');
+      if (currentSelectionDiv) {
+        currentSelectionDiv.textContent = 'Nothing selected';
+        currentSelectionDiv.classList.remove('has-selection');
+        // Remove all special styling
+        currentSelectionDiv.style.background = '';
+        currentSelectionDiv.style.borderColor = '';
+        currentSelectionDiv.style.color = '';
+      }
+      
+      // Enable the audit button so user can proceed once they select something
+      var analyzeButton = document.getElementById('analyze-cta');
+      if (analyzeButton) {
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Audit Variables';
+      }
+    }
+    
+    function handleShowOnboardingAgain() {
+      console.log('Help button clicked - showing onboarding again!');
+      
+      // Reset the skip flag so onboarding shows again
+      hasSkippedOnboarding = false;
+      
+      // Show onboarding and hide main interface
+      document.getElementById('onboarding').style.display = 'block';
+      document.getElementById('main-interface').style.display = 'none';
+    }
+    
+    // Simple, direct approach - no DOMContentLoaded wrapper
+    console.log('Script starting...');
+    
+    // State management - make these global
+    var currentSelectionId = null;
+    var currentSelectionName = null;
+    var currentSelectionType = null;
+    var currentSelectionDiv = null;
+    var analyzeButton = null;
 
-    const currentSelectionDiv = document.getElementById('current-selection');
-    const analyzeButton = document.getElementById('analyze-cta');
+    // Wait a bit for DOM to be ready, then set up everything
+    setTimeout(function() {
+      console.log('Setting up buttons...');
+      
+      currentSelectionDiv = document.getElementById('current-selection');
+      analyzeButton = document.getElementById('analyze-cta');
+      const onboardingDiv = document.getElementById('onboarding');
+      const mainInterfaceDiv = document.getElementById('main-interface');
+      const skipOnboardingBtn = document.getElementById('skip-onboarding');
+      const startAuditBtn = document.getElementById('start-audit');
+      const showOnboardingAgainBtn = document.getElementById('show-onboarding-again');
+      
+      console.log('Elements found:', {
+        onboardingDiv: !!onboardingDiv,
+        mainInterfaceDiv: !!mainInterfaceDiv,
+        skipOnboardingBtn: !!skipOnboardingBtn,
+        startAuditBtn: !!startAuditBtn,
+        showOnboardingAgainBtn: !!showOnboardingAgainBtn
+      });
+
+      // Check if user has skipped onboarding in this session
+      if (hasSkippedOnboarding) {
+        if (onboardingDiv) onboardingDiv.style.display = 'none';
+        if (mainInterfaceDiv) mainInterfaceDiv.style.display = 'block';
+      } else {
+        if (onboardingDiv) onboardingDiv.style.display = 'block';
+        if (mainInterfaceDiv) mainInterfaceDiv.style.display = 'none';
+      }
+
+      // Handle skip onboarding button
+      if (skipOnboardingBtn) {
+        skipOnboardingBtn.addEventListener('click', function() {
+          console.log('Skip button clicked!');
+          localStorage.setItem('figma-linter-onboarding-seen', 'true');
+          if (onboardingDiv) onboardingDiv.style.display = 'none';
+          if (mainInterfaceDiv) mainInterfaceDiv.style.display = 'block';
+          if (currentSelectionDiv) {
+            currentSelectionDiv.textContent = 'Nothing selected';
+            currentSelectionDiv.classList.remove('has-selection');
+          }
+        });
+      }
+
+      // Handle start audit button
+      if (startAuditBtn) {
+        startAuditBtn.addEventListener('click', function() {
+          console.log('Start audit button clicked!');
+          localStorage.setItem('figma-linter-onboarding-seen', 'true');
+          if (onboardingDiv) onboardingDiv.style.display = 'none';
+          if (mainInterfaceDiv) mainInterfaceDiv.style.display = 'block';
+          if (currentSelectionDiv) {
+            currentSelectionDiv.textContent = 'Nothing selected';
+            currentSelectionDiv.classList.remove('has-selection');
+            // Remove all special styling
+            currentSelectionDiv.style.background = '';
+            currentSelectionDiv.style.borderColor = '';
+            currentSelectionDiv.style.color = '';
+          }
+        });
+      }
+
+      // Handle show onboarding again button
+      if (showOnboardingAgainBtn) {
+        showOnboardingAgainBtn.addEventListener('click', function() {
+          if (onboardingDiv) onboardingDiv.style.display = 'block';
+          if (mainInterfaceDiv) mainInterfaceDiv.style.display = 'none';
+        });
+      }
+
+      function resetSelectionDisplay() {
+        if (currentSelectionDiv) {
+          currentSelectionDiv.style.background = '';
+          currentSelectionDiv.style.borderColor = '';
+          currentSelectionDiv.style.color = '';
+        }
+      }
 
     // Handle analyze button click
+      if (analyzeButton) {
     analyzeButton.onclick = () => {
       analyzeCurrentSelection();
     };
+      }
+      
+    }, 100); // End of setTimeout
 
 
     
@@ -599,23 +972,38 @@
     
     // Function to update current selection display
     function updateSelectionDisplay(containerId, containerName, containerType) {
+      // Lazy-resolve elements in case this runs before setup
+      if (!currentSelectionDiv) {
+        currentSelectionDiv = document.getElementById('current-selection');
+      }
+      if (!analyzeButton) {
+        analyzeButton = document.getElementById('analyze-cta');
+      }
+
       currentSelectionId = containerId;
       currentSelectionName = containerName;
       currentSelectionType = containerType;
       
-      if (containerId) {
+      // Reset any onboarding styling when a real selection is made
+      if (typeof resetSelectionDisplay === 'function') {
+        resetSelectionDisplay();
+      }
+      
+      if (containerId && currentSelectionDiv) {
         const icon = containerType === 'SECTION' ? '📁' : '🔲';
-        currentSelectionDiv.textContent = `${icon} ${containerName}`;
+        currentSelectionDiv.innerHTML = `${icon}&nbsp;<strong>${containerName}</strong>`;
         currentSelectionDiv.classList.add('has-selection');
-        analyzeButton.disabled = false;
+        if (analyzeButton) analyzeButton.disabled = false;
         
-        // Clear previous results
-        document.getElementById('analysis-results').innerHTML = '';
-      } else {
-        currentSelectionDiv.textContent = 'No section or frame selected';
+        // Clear previous results (id may be 'audit-results')
+        const resultsEl = document.getElementById('audit-results') || document.getElementById('analysis-results');
+        if (resultsEl) resultsEl.innerHTML = '';
+      } else if (currentSelectionDiv) {
+        currentSelectionDiv.textContent = 'Nothing selected';
         currentSelectionDiv.classList.remove('has-selection');
-        analyzeButton.disabled = true;
-        document.getElementById('analysis-results').innerHTML = '';
+        if (analyzeButton) analyzeButton.disabled = true;
+        const resultsEl = document.getElementById('audit-results') || document.getElementById('analysis-results');
+        if (resultsEl) resultsEl.innerHTML = '';
       }
     }
 

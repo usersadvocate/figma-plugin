@@ -7,6 +7,9 @@ import type { UIMessage } from "./types";
 // Initialize the plugin UI
 figma.showUI(__html__, { width: 600, height: 500 });
 
+// Immediately reflect current selection on UI when plugin opens
+handleSelectionChange();
+
 // Handle messages from the UI
 figma.ui.onmessage = async (msg: UIMessage) => {
   if (msg.type === "resize") {
