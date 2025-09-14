@@ -5,6 +5,12 @@ import { analyzeContainerContent } from "../analysis/nodes";
 import { auditContainer } from "../analysis/audit";
 import { UIMessage } from "../types";
 
+// Suppress broadcasting selection changes triggered by programmatic highlights
+let suppressSelectionBroadcastUntil = 0;
+function suppressSelectionBroadcastFor(durationMs: number): void {
+  suppressSelectionBroadcastUntil = Date.now() + durationMs;
+}
+
 // Helper function to highlight a specific node in Figma (without viewport movement)
 export async function jumpToNode(nodeId: string) {
   try {
@@ -21,7 +27,10 @@ export async function jumpToNode(nodeId: string) {
       return;
     }
 
-    // Select the node to highlight it, but don't move the viewport
+    // Highlight the node by selecting it, but keep plugin UI on the table
+    // and avoid any viewport movement or UI redirects.
+    // We temporarily suppress broadcasting the selection change to the UI.
+    suppressSelectionBroadcastFor(500);
     figma.currentPage.selection = [node as SceneNode];
 
     console.log(`✅ Successfully highlighted "${node.name}" (${node.type})`);
@@ -89,6 +98,9 @@ export async function handleUIMessage(msg: UIMessage) {
 
 // Selection change handler
 export function handleSelectionChange() {
+  if (Date.now() < suppressSelectionBroadcastUntil) {
+    return; // Ignore programmatic selection changes made for highlighting
+  }
   const containerId = getSelectedContainerId();
   figma.ui.postMessage({ type: "selection-section", sectionId: containerId });
 }

@@ -416,7 +416,7 @@
       display: flex;
       align-items: center;
     }
-    
+
     .current-selection.has-selection {
       color: #2e7d32;
       border-color: #4caf50;
@@ -630,6 +630,18 @@
       border: 1px solid #f44336;
     }
 
+    .status-badge.local {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #2196f3;
+    }
+
+    .status-badge.global {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      border: 1px solid #9c27b0;
+    }
+
     .jump-btn {
       padding: 4px 8px;
       background: #2a2a2a;
@@ -717,7 +729,7 @@
             <div class="example-code">
               <span class="token">Spacing: 16px</span> (token) + <span class="arbitrary">Padding: 12px</span> (arbitrary)
             </div>
-          </div>
+      </div>
         </div>
         
         <div class="solution-section">
@@ -1409,35 +1421,39 @@
       html += `
         <div class="audit-card-grid">
           
-          <!-- Total Auditable Nodes -->
+          <!-- Total Tokens Found -->
           <div class="audit-card">
-            <div class="audit-card-header">TOTAL AUDITABLE</div>
-            <div class="audit-card-number">${audit.summary.totalAuditableNodes}</div>
-            <div class="audit-card-label">nodes</div>
-          </div>
-
-          <!-- With Variables -->
-          <div class="audit-card clickable" onclick="showWithVariables()">
-            <div class="audit-card-header">WITH VARIABLES ›</div>
+            <div class="audit-card-header">TOTAL TOKENS FOUND</div>
             <div class="audit-card-number">${audit.summary.withVariablesCount}</div>
-            <div class="audit-card-label">
-              Local: ${audit.summary.withLocalVariablesCount}<br>
-              Global: ${audit.summary.withGlobalVariablesCount}
-            </div>
+            <div class="audit-card-label">tokens</div>
           </div>
 
-          <!-- Without Variables -->
+          <!-- Tokens -->
+          <div class="audit-card clickable" onclick="showWithVariables()">
+            <div class="audit-card-header">TOKENS ›</div>
+            <div class="audit-card-number">${audit.summary.withVariablesCount}</div>
+            <div class="audit-card-label">elements using tokens</div>
+          </div>
+
+          <!-- Non-token Elements -->
           <div class="audit-card clickable" onclick="showWithoutVariables()">
-            <div class="audit-card-header">NO VARIABLES ›</div>
+            <div class="audit-card-header">NON-TOKEN ELEMENTS ›</div>
             <div class="audit-card-number">${audit.summary.withoutVariablesCount}</div>
             <div class="audit-card-label">manual values</div>
           </div>
 
-          <!-- Coverage -->
-          <div class="audit-card">
-            <div class="audit-card-header">COVERAGE</div>
-            <div class="audit-card-number">${audit.coveragePercentage.toFixed(1)}%</div>
-            <div class="audit-card-label">variables used</div>
+          <!-- Local Tokens -->
+          <div class="audit-card clickable" onclick="showLocalTokens()">
+            <div class="audit-card-header">LOCAL TOKENS ›</div>
+            <div class="audit-card-number">${audit.summary.withLocalVariablesCount}</div>
+            <div class="audit-card-label">local variables</div>
+          </div>
+
+          <!-- Global Tokens -->
+          <div class="audit-card clickable" onclick="showGlobalTokens()">
+            <div class="audit-card-header">GLOBAL TOKENS ›</div>
+            <div class="audit-card-number">${audit.summary.withGlobalVariablesCount}</div>
+            <div class="audit-card-label">global variables</div>
           </div>
         </div>
       `;
@@ -1575,6 +1591,94 @@
               <span class="status-badge ${statusClass}">${status}</span>
             </div>
             <div class="audit-table-cell" style="font-size: 9px;">${node.framePath}</div>
+            <div class="audit-table-cell">
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Highlight</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div></div>';
+      document.getElementById('audit-detail-view').innerHTML = html;
+    }
+
+    // Show nodes with local tokens only
+    function showLocalTokens() {
+      const audit = window.currentAudit;
+      if (!audit) return;
+
+      const localTokenNodes = audit.withVariables.filter(node => 
+        node.classification === 'LOCAL_VARIABLES'
+      );
+
+      let html = `
+        <div style="margin-top: 20px;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; color: #2a2a2a;">
+            ← Back | Local Tokens (${localTokenNodes.length})
+          </h3>
+          <div class="audit-table">
+            <div class="audit-table-header">
+              <div>Node Name</div>
+              <div>Type</div>
+              <div>Status</div>
+              <div>Frame Path</div>
+              <div>Action</div>
+            </div>
+      `;
+
+      for (const node of localTokenNodes) {
+        html += `
+          <div class="audit-table-row" data-node-id="${node.id}">
+            <div class="audit-table-cell"><strong>${node.name}</strong></div>
+            <div class="audit-table-cell">${node.type}</div>
+            <div class="audit-table-cell">
+              <span class="status-badge local">Local Tokens</span>
+            </div>
+            <div class="audit-table-cell">${node.framePath || 'N/A'}</div>
+            <div class="audit-table-cell">
+              <button onclick="jumpToNode('${node.id}')" class="jump-btn">Highlight</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div></div>';
+      document.getElementById('audit-detail-view').innerHTML = html;
+    }
+
+    // Show nodes with global tokens only
+    function showGlobalTokens() {
+      const audit = window.currentAudit;
+      if (!audit) return;
+
+      const globalTokenNodes = audit.withVariables.filter(node => 
+        node.classification === 'GLOBAL_VARIABLES'
+      );
+
+      let html = `
+        <div style="margin-top: 20px;">
+          <h3 style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; color: #2a2a2a;">
+            ← Back | Global Tokens (${globalTokenNodes.length})
+          </h3>
+          <div class="audit-table">
+            <div class="audit-table-header">
+              <div>Node Name</div>
+              <div>Type</div>
+              <div>Status</div>
+              <div>Frame Path</div>
+              <div>Action</div>
+            </div>
+      `;
+
+      for (const node of globalTokenNodes) {
+        html += `
+          <div class="audit-table-row" data-node-id="${node.id}">
+            <div class="audit-table-cell"><strong>${node.name}</strong></div>
+            <div class="audit-table-cell">${node.type}</div>
+            <div class="audit-table-cell">
+              <span class="status-badge global">Global Tokens</span>
+            </div>
+            <div class="audit-table-cell">${node.framePath || 'N/A'}</div>
             <div class="audit-table-cell">
               <button onclick="jumpToNode('${node.id}')" class="jump-btn">Highlight</button>
             </div>
