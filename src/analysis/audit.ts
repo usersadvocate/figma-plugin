@@ -6,7 +6,6 @@ import {
   AuditableNodeType,
   NodeClassification,
   LintFinding,
-  LintRule,
   VariableBinding,
 } from "../types";
 import { extractVariableBindings } from "./variables";

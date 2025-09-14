@@ -88,7 +88,7 @@ export interface LintFinding {
   severity: "error" | "warning" | "info";
   message: string;
   property?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export type LintRule =
@@ -217,7 +217,7 @@ export type UIMessage =
 
 export interface SectionsLoadedResponse {
   type: "sections-loaded";
-  sections: any[];
+  sections: SectionNode[];
   selectedSectionId: string | null;
 }
 

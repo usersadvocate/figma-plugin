@@ -28,7 +28,8 @@ export async function analyzeComponentInfo(
       // Try to get the actual library name from the component
       try {
         // Check for library information in component properties
-        const componentAny = mainComponent as any;
+        const componentAny = mainComponent as ComponentNode &
+          Record<string, unknown>;
 
         // Log available properties for debugging
         console.log(
@@ -37,9 +38,17 @@ export async function analyzeComponentInfo(
         );
 
         // Try different potential properties that might contain library info
-        if (componentAny.libraryName) {
+        if (
+          componentAny.libraryName &&
+          typeof componentAny.libraryName === "string"
+        ) {
           remoteLibrary = componentAny.libraryName;
-        } else if (componentAny.library && componentAny.library.name) {
+        } else if (
+          componentAny.library &&
+          typeof componentAny.library === "object" &&
+          "name" in componentAny.library &&
+          typeof componentAny.library.name === "string"
+        ) {
           remoteLibrary = componentAny.library.name;
         } else if (componentAny.key) {
           // Component key might contain useful info, but not the full library name
@@ -93,7 +102,7 @@ export async function analyzeMainComponentInfo(
       // Try to get the actual library name from the component
       try {
         // Check for library information in component properties
-        const componentAny = node as any;
+        const componentAny = node as ComponentNode & Record<string, unknown>;
 
         // Log available properties for debugging
         console.log(
@@ -102,9 +111,17 @@ export async function analyzeMainComponentInfo(
         );
 
         // Try different potential properties that might contain library info
-        if (componentAny.libraryName) {
+        if (
+          componentAny.libraryName &&
+          typeof componentAny.libraryName === "string"
+        ) {
           remoteLibrary = componentAny.libraryName;
-        } else if (componentAny.library && componentAny.library.name) {
+        } else if (
+          componentAny.library &&
+          typeof componentAny.library === "object" &&
+          "name" in componentAny.library &&
+          typeof componentAny.library.name === "string"
+        ) {
           remoteLibrary = componentAny.library.name;
         } else if (componentAny.key) {
           // Component key might contain useful info, but not the full library name

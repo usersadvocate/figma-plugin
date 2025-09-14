@@ -75,10 +75,12 @@ export async function extractVariableBindings(
   const bindings: VariableBinding[] = [];
 
   try {
-    let boundVars: any = {};
+    let boundVars: Record<string, unknown> = {};
 
     if ("boundVariables" in node) {
-      boundVars = (node as any).boundVariables || {};
+      boundVars =
+        (node as SceneNode & { boundVariables?: Record<string, unknown> })
+          .boundVariables || {};
     }
 
     if (!boundVars || typeof boundVars !== "object") {
@@ -109,7 +111,12 @@ export async function extractVariableBindings(
               });
             }
           }
-        } else if (binding && binding.id) {
+        } else if (
+          binding &&
+          typeof binding === "object" &&
+          "id" in binding &&
+          typeof binding.id === "string"
+        ) {
           const varInfo = await getVariableInfo(binding.id);
           bindings.push({
             property: prop,
